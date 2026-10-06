@@ -1,0 +1,40 @@
+PROPRIETARY SOFTWARE LICENCE — ALL RIGHTS RESERVED
+
+Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+
+This repository, including all source code, object code, database schemas,
+specifications, documentation, designs, user interfaces, prompts and other
+materials (together, the "Software"), is the confidential and proprietary
+property of the copyright owner named above.
+
+1. No licence is granted. Except as expressly permitted in a separate written
+   agreement signed by the copyright owner, no person may use, copy, modify,
+   merge, publish, distribute, sublicense, sell, host for others, create
+   derivative works of, or otherwise exploit the Software or any part of it.
+
+2. Confidentiality. The Software contains trade secrets and confidential
+   information. Anyone given access to it must keep it strictly confidential,
+   use it only for the purpose for which access was given, and not disclose it
+   to any third party.
+
+3. No reverse engineering. You may not decompile, disassemble, reverse
+   engineer, or attempt to derive the source code, structure or algorithms of
+   any compiled or hosted version of the Software, except to the extent that
+   applicable law expressly permits despite this restriction.
+
+4. Access to this repository (including as a collaborator, contractor or
+   employee) does not transfer any ownership or licence. All contributions made
+   to the Software are owned by the copyright owner under the contributor's
+   written agreement.
+
+5. Third-party components are licensed under their own licences, listed in
+   THIRD_PARTY_NOTICES (generated at build time). Those licences apply only to
+   those components.
+
+6. Termination. Any unauthorised use automatically terminates any permission
+   you may have had, and you must immediately delete all copies.
+
+7. No warranty. The Software is provided "as is" without warranty of any kind,
+   to the maximum extent permitted by law.
+
+Enquiries about licensing: [contact email]
