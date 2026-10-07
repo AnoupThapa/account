@@ -389,6 +389,7 @@ CREATE TABLE approval_requests (
   workflow_id  uuid REFERENCES approval_workflows(id),
   current_step int NOT NULL DEFAULT 1,
   total_steps  int NOT NULL DEFAULT 1,
+  steps        jsonb NOT NULL DEFAULT '[]',  -- snapshot of the applicable workflow steps at submission
   status       varchar(12) NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED','WITHDRAWN')),
   submitted_by uuid NOT NULL REFERENCES users(id),
   submitted_at timestamptz NOT NULL DEFAULT now(),

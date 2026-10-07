@@ -141,6 +141,7 @@ export interface ApprovalRequests {
   doc_type: string;
   id: Generated<string>;
   status: string;
+  steps: Generated<Json>;
   submitted_at: Generated<Timestamp>;
   submitted_by: string;
   total_steps: Generated<number>;
