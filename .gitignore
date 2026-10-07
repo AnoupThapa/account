@@ -4,4 +4,8 @@
 node_modules/
 dist/
 .next/
+.turbo/
+coverage/
 *.log
+*.tsbuildinfo
+next-env.d.ts
