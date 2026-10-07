@@ -3,7 +3,7 @@
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. This repository is private. No part may be copied, used or shared without written permission. See [LICENSE](LICENSE).
 
 > **Status:** Phases 0–2 built and tested (foundation, core ledger, sales & purchases) — see [phase report](docs/phase-reports/phase-0-2.md).
-> **Run it:** [docs/dev-environment.md](docs/dev-environment.md) (Windows + Docker Desktop, no coding needed).
+> **Run it:** double-click `Start LedgerPro.cmd` on Windows after installing Node.js 22 and PostgreSQL 16 — step by step in [docs/dev-environment.md](docs/dev-environment.md) (Docker Desktop also works).
 > **Purpose:** Management accounting (not a statutory tax-filing tool) for trading, service, manufacturing and mixed businesses, following Nepal (NFRS / Nepal practice) and international (IFRS) accounting practice, with optional Australian GST support.
 
 ## What this platform does

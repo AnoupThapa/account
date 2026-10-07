@@ -9,7 +9,7 @@ FROM base AS build
 COPY . .
 RUN pnpm install --frozen-lockfile
 # Next.js bakes the API address into its rewrites at build time
-ENV API_INTERNAL_URL=http://api:4000
+ENV API_INTERNAL_URL=http://api:4000 NEXT_STANDALONE=1
 RUN pnpm --filter @ledgerpro/shared build && pnpm --filter @ledgerpro/db build \
  && pnpm --filter @ledgerpro/api build && pnpm --filter @ledgerpro/worker build \
  && pnpm --filter @ledgerpro/web build

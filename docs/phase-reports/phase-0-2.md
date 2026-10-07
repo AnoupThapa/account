@@ -5,7 +5,7 @@
 Branch: `feature/phase-0-2`. Scope agreed with the owner: Phases 0, 1 and 2 in one session (instead of one phase per session).
 
 ## 1. What was built (plain English)
-- **A working web app** (website + server + background worker + database) you can run on your PC with Docker.
+- **A working web app** (website + server + background worker + database) you can run on your Windows PC by double-clicking `Start LedgerPro.cmd` (no Docker needed), or with Docker.
 - **Sign-in security:** strong password hashing, 6-digit authenticator codes (2FA) — mandatory for Admin, Checker and Finance Manager — one-time recovery codes, account lock after 5 wrong passwords (with email alert), password reset by email, automatic sign-out after 30 minutes idle, “sign out other devices”, admin force-logout, and re-confirm-password for sensitive actions (unlock period, change roles, tax rates, company controls).
 - **Companies:** Nepal (NPR, Bikram Sambat dates, FY Shrawan–Ashadh, VAT 13%, PAN, TDS) and Australia (AUD, July–June, GST 10%, ABN). Creating a company loads its chart of accounts, tax codes, roles, approval workflows and first fiscal year automatically. One login can belong to several companies.
 - **Every date in both calendars** (BS and AD), using a 2000–2100 BS table checked against 3 independent sources.
@@ -59,7 +59,7 @@ Branch: `feature/phase-0-2`. Scope agreed with the owner: Phases 0, 1 and 2 in o
 | AR control = sum of customer balances; AP control = sum of supplier balances | ✅ | integrity checks after invoices, receipts with TDS, credit notes, advances, bills, payments with TDS, debit notes |
 
 ## 4. What you (the owner) need to do
-1. **Look at it:** follow `docs/dev-environment.md` section A (Docker Desktop) and click around with the demo users.
+1. **Look at it:** follow `docs/dev-environment.md` section A (install Node.js 22 + PostgreSQL 16, then double-click `Start LedgerPro.cmd`) and click around with the demo users.
 2. **GitHub:** push this folder to your private repo `accx` on a branch (not main) and open a pull request. Then in GitHub → Settings → Secrets → Actions add, when you have a staging server: `STAGING_HOST`, `STAGING_USER`, `STAGING_SSH_KEY`, `STAGING_PATH`.
 3. **Before any real data:** in the server's `.env` set new random values for `JWT_ACCESS_SECRET` and `ENCRYPTION_KEY` (commands are in `.env.example`), real database passwords, `COOKIE_SECURE=true`, `ENFORCE_2FA=true`, and SMTP settings so password-reset emails are sent.
 4. **Decide** (docs/11 open questions still open): default approval thresholds (I used NPR 500,000 / AUD 50,000 for a second approval on payments, bills, journals, expenses and corrections — editable in Settings → Approval workflows), multi-currency in v1, final product name.
@@ -68,6 +68,7 @@ Branch: `feature/phase-0-2`. Scope agreed with the owner: Phases 0, 1 and 2 in o
 - **Database toolkit:** Kysely instead of Prisma (approved by you on 6 Oct; docs updated).
 - **BS calendar 2084–2100** is provisional (published calendars disagree from 2084). Admin can correct month lengths (Settings API `PATCH /bs-calendar/:year/:month`, Super Admin + step-up); it is flagged in the database.
 - **Docker images were not test-built here** (Docker Hub is blocked in my build environment). Everything inside them was built and tested directly. The first `docker compose up --build` on your PC is the real test — if it fails, paste the error into a session.
+- **Windows start file** (`Start LedgerPro.cmd`) was syntax-checked and its steps tested on Linux, but not yet run on a real Windows PC — your first double-click is the real test.
 - **CI workflow has not run yet** (no GitHub access from this session).
 - **Inventory:** stock items post to the Inventory account on bills, but stock quantities/valuation (FIFO/WAC), COGS on sale and GRN→GRNI journals are **Phase 7**. Goods receipts record quantities only.
 - **Single currency per company** in v1 (fields for foreign currency exist; open question 7).

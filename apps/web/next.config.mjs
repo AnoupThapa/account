@@ -11,7 +11,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const api = process.env.API_INTERNAL_URL || 'http://localhost:4000';
 const nextConfig = {
-  output: 'standalone',
+  // standalone bundle only for Docker images (Windows can't create its symlinks without Developer Mode)
+  output: process.env.NEXT_STANDALONE === '1' ? 'standalone' : undefined,
   outputFileTracingRoot: path.join(here, '../../'),
   poweredByHeader: false,
   transpilePackages: ['@ledgerpro/shared'],

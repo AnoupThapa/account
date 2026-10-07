@@ -2,7 +2,30 @@
 
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. See [LICENSE](../LICENSE).
 
-## A. Easiest: run everything on your Windows PC with Docker Desktop (no coding)
+## A. Easiest without Docker: run on your Windows PC with a double-click
+
+You install two free programs once, then double-click a file. This is for trying LedgerPro on your own PC; real company data belongs on a proper server later.
+
+**One-time installs**
+1. **Node.js 22 LTS** — go to https://nodejs.org , download the *LTS* version for Windows, run it and click *Next* through every screen (the defaults are fine).
+2. **PostgreSQL 16** (the database) — go to https://www.postgresql.org/download/windows/ → *Download the installer* (EDB) → choose **16.x for Windows x86-64**. Run it and click *Next* through the screens. It will ask you to **choose a password for the "postgres" user — write it down**, you need it once. Keep port **5432**. Untick *Stack Builder* at the end (not needed).
+
+**Start LedgerPro**
+3. Open the `ledgerpro` folder in File Explorer and double-click **`Start LedgerPro.cmd`**.
+   - If Windows shows a blue *"Windows protected your PC"* box, click *More info* → *Run anyway* (it is your own file).
+   - The **first time** it asks for the PostgreSQL password from step 2 (typing is hidden — that's normal), then installs and builds everything. This takes **5–15 minutes** and needs internet. Later starts take under a minute.
+4. Two windows called *LedgerPro API* and *LedgerPro Website* open — **leave them open**. Your browser opens **http://localhost:3000** by itself.
+5. Sign in with `accountant.np@ledgerpro.local` / `Demo-Ledger-2026!`
+   (other demo users: `checker.np@…`, `finance.np@…`, `auditor.np@…`, the `.au` equivalents, and `owner@ledgerpro.local`, all with the same password).
+
+**Every day:** double-click `Start LedgerPro.cmd`. **To stop:** close the two LedgerPro windows. Your data stays in PostgreSQL on your PC.
+**After you receive a new version of the code:** double-click `Update and Start LedgerPro.cmd` once (reinstalls and rebuilds).
+
+What the start file sets up for this PC only (in the `.env` file it creates): new random secret keys, 2FA *not* forced so the demo users can sign in without an authenticator app, and Microsoft Edge for making PDF invoices. Background emails (the worker) are not started on Windows — not needed for trying the app. **Never copy this `.env` to a server.**
+
+If something fails, the window says **PROBLEM:** and what to do; if it isn't clear, copy the messages into a Claude session.
+
+## A2. Alternative: Docker Desktop
 
 1. Install **Docker Desktop** for Windows (docker.com → Download → Windows). Start it and wait until it says *Engine running*.
 2. Open the `ledgerpro` folder in File Explorer. Copy `.env.example` and rename the copy to `.env` (keep it in the same folder).
