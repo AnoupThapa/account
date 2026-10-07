@@ -1,0 +1,30 @@
+{
+  "name": "@ledgerpro/db",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "migrate": "tsx scripts/migrate.ts",
+    "seed": "tsx scripts/seed.ts",
+    "reset": "tsx scripts/reset.ts",
+    "codegen": "kysely-codegen --dialect postgres --url \"$DATABASE_ADMIN_URL\" --out-file src/generated.ts --exclude-pattern schema_migrations --date-parser string --numeric-parser string",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ledgerpro/shared": "workspace:*",
+    "kysely": "^0.27.4",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "kysely-codegen": "^0.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
