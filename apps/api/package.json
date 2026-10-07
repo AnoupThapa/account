@@ -5,12 +5,13 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsx watch --env-file=../../.env src/main.ts",
+    "dev": "node --no-experimental-strip-types --env-file=../../.env --watch -r @swc-node/register src/main.ts",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "seed:demo": "tsx --env-file=../../.env src/scripts/seed-demo.ts"
+    "seed:demo": "node --no-experimental-strip-types --env-file=../../.env -r @swc-node/register src/scripts/seed-demo.ts",
+    "seed:demo:prod-build": "node dist/scripts/seed-demo.js"
   },
   "dependencies": {
     "@ledgerpro/db": "workspace:*",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",
+    "@swc-node/register": "^1.12.1",
     "@swc/core": "^1.9.2",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^5.0.0",

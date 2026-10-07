@@ -139,6 +139,17 @@ export class UsersController {
     });
   }
 
+  /** What the signed-in user may do in the selected company (the web app hides what you can't do; the API still enforces it). */
+  @Perm('member')
+  @Get('me/access')
+  access(@Ctx() ctx: CompanyContext) {
+    return this.tx(ctx, async (trx) => {
+      const company = await trx.selectFrom('companies').selectAll().where('id', '=', ctx.companyId).executeTakeFirstOrThrow();
+      const roles = ctx.roleIds.length ? await trx.selectFrom('roles').select(['id', 'name', 'key']).where('id', 'in', ctx.roleIds).execute() : [];
+      return { company, roles, permissions: [...ctx.permissions].sort() };
+    });
+  }
+
   // ------------------------------------------------------------- roles
   @Perm('member')
   @Get('permissions')
