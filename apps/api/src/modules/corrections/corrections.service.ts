@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 import { Body, Controller, Get, Injectable, OnModuleInit, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { AppError, DocType, DOC_TYPES, zAdDate } from '@ledgerpro/shared';

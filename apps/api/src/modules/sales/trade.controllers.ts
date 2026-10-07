@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Type } from '@nestjs/common';
 import { z } from 'zod';
 import { AppError, zAdDate } from '@ledgerpro/shared';

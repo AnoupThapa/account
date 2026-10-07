@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 /** Phase 1 acceptance (docs/phases.md): core ledger, maker–checker, opening balances, TB/GL/Day Book. */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { addMember, closeApp, setupCompany, TestClient } from './helpers';

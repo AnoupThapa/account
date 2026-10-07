@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 /**
  * Database-level guarantees (docs/02 §2, phases.md Phase 0/1 acceptance):
  * these tests talk to PostgreSQL directly as the app role — i.e. they BYPASS the API —

@@ -10,7 +10,7 @@ You are building **LedgerPro**, a proprietary management-accounting web app. The
   - Australia: AUD, AD calendar, FY 1 July – 30 June, GST 10% / GST-free / input-taxed, ABN.
   - Country is a per-company setting; one user can belong to companies in both countries.
 - **Usage:** owner's own companies first, then sold to other companies as SaaS. Design multi-tenant from day one (company_id + RLS everywhere), but subscription billing/self-signup is NOT built until a later phase.
-- **Stack:** as in docs/architecture.md (Next.js, NestJS, PostgreSQL 16, Prisma, Redis/BullMQ, pnpm + Turborepo).
+- **Stack:** as in docs/architecture.md (Next.js, NestJS, PostgreSQL 16, Kysely (type-safe SQL; replaced Prisma — approved 2026-10-06), Redis/BullMQ, pnpm + Turborepo).
 - **Licence:** proprietary. Add the copyright header from docs/ip-protection.md to every new source file. Never add AGPL/GPL dependencies; check licences of new dependencies.
 
 ## Read before working

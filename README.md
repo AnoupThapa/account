@@ -2,7 +2,8 @@
 
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. This repository is private. No part may be copied, used or shared without written permission. See [LICENSE](LICENSE).
 
-> **Status:** Specification v1.0 (for review). No code yet.
+> **Status:** Phases 0–2 built and tested (foundation, core ledger, sales & purchases) — see [phase report](docs/phase-reports/phase-0-2.md).
+> **Run it:** [docs/dev-environment.md](docs/dev-environment.md) (Windows + Docker Desktop, no coding needed).
 > **Purpose:** Management accounting (not a statutory tax-filing tool) for trading, service, manufacturing and mixed businesses, following Nepal (NFRS / Nepal practice) and international (IFRS) accounting practice, with optional Australian GST support.
 
 ## What this platform does
@@ -21,6 +22,17 @@
 | Dates | Every date shown in both BS (Nepali) and AD; Nepal FY Shrawan 1 – Ashadh end |
 | Dashboard | Financial highlights + downloadable/shareable summary sheet (PDF/Excel) |
 | Integration-ready | API-first, outbox pattern, adapters for IRD (CBMS), banks, payment gateways |
+
+## What's in this repository
+```
+apps/api      NestJS REST API (auth, tenancy, ledger, approvals, sales, purchases, reports, PDFs)
+apps/web      Next.js web app (all screens)
+apps/worker   background jobs (emails, nightly integrity checks)
+packages/db   SQL migrations (with the database-level accounting rules), seeds, COA templates
+packages/shared  money, BS/AD calendar, fiscal years, VAT/GST maths, permissions, validation
+infra/        docker-compose, Postgres init
+docs/         specification + phase reports
+```
 
 ## Specification documents
 
@@ -47,7 +59,7 @@
 
 - **Frontend:** Next.js (React, TypeScript), Tailwind, shadcn/ui
 - **Backend:** NestJS (TypeScript) REST API with OpenAPI
-- **Database:** PostgreSQL 16 (SQL), Prisma ORM + raw SQL for reports
+- **Database:** PostgreSQL 16 (SQL), Kysely (type-safe SQL query builder) + hand-written SQL migrations
 - **Jobs/Queue:** Redis + BullMQ (OCR, Drive sync, report generation, imports)
 - **Storage:** Google Drive (shared) + S3-compatible object store (working copies)
 - **OCR:** Google Document AI (primary) with an AI-vision fallback; Tesseract offline option

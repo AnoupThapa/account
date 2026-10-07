@@ -1,0 +1,44 @@
+name: CI
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    env:
+      TEST_DATABASE_ADMIN_URL: postgres://ledger_owner:ledger_owner_dev@localhost:5432/ledgerpro_test
+      TEST_DATABASE_URL: postgres://ledger_app:ledger_app_dev@localhost:5432/ledgerpro_test
+      DATABASE_URL: postgres://ledger_app:ledger_app_dev@localhost:5432/ledgerpro_test
+      JWT_ACCESS_SECRET: ci-only-secret-0123456789abcdefghijklmnopqrstuvwxyz
+      ENCRYPTION_KEY: Y2ktb25seS1jaS1vbmx5LWNpLW9ubHktY2ktb25seS0=
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - name: Create database roles
+        run: PGPASSWORD=postgres psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f infra/postgres/init.sql
+      - run: pnpm install --frozen-lockfile
+      - name: Copyright headers present
+        run: node scripts/check-headers.mjs
+      - name: Licence check (no GPL/AGPL dependencies)
+        run: node scripts/check-licences.mjs
+      - run: pnpm build
+      - run: pnpm typecheck
+      - name: Install Chromium for PDF tests
+        run: npx --yes playwright@1.56.1 install --with-deps chromium && echo "CHROMIUM_PATH=$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux/chrome | head -1)" >> $GITHUB_ENV
+      - run: pnpm test
+      - name: Dependency audit (fail on high)
+        run: pnpm audit --prod --audit-level high

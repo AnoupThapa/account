@@ -9,7 +9,7 @@
 | Frontend | **Next.js 15 (React, TypeScript)**, Tailwind CSS, shadcn/ui, TanStack Table, Recharts | Mature, fast, huge ecosystem; good for data-heavy screens |
 | Backend API | **NestJS (TypeScript)** | Modular structure fits accounting domains; built-in validation, guards (RBAC), OpenAPI |
 | Database | **PostgreSQL 16** | Strong SQL, transactions, constraints, triggers, row-level security, NUMERIC precision |
-| ORM | Prisma (CRUD) + hand-written SQL views (reports) | Type-safety plus full SQL power where it matters |
+| Data access | **Kysely** (type-safe SQL builder, MIT) with types generated from the live schema (`kysely-codegen`) + forward-only hand-written SQL migrations | Type-safety plus full SQL power; no binary engine downloads. *Changed from Prisma on 2026-10-06 with owner approval: Prisma needs engine binaries from binaries.prisma.sh, which the build environment cannot reach; triggers, RLS and constraints are plain SQL either way.* |
 | Queue / jobs | Redis + BullMQ | OCR, Drive sync, statement import, PDF/Excel generation, scheduled tasks |
 | File store | Google Drive (shared, master copy) + S3-compatible bucket (cache, previews) | Team access in Drive; fast in-app preview |
 | OCR | Google Document AI Invoice Parser; AI-vision fallback; Tesseract (eng+nep) offline option | Accuracy on invoices incl. tax fields |
@@ -72,7 +72,7 @@ ledgerpro/
 │  ├─ api/            NestJS API
 │  └─ worker/         BullMQ job processors
 ├─ packages/
-│  ├─ db/             Prisma schema, migrations, SQL views, seeds (COA templates, tax codes, BS calendar)
+│  ├─ db/             SQL migrations, Kysely types, seeds (COA templates, tax codes, BS calendar)
 │  ├─ shared/         types, Zod schemas, money & date (BS/AD) utilities, permissions list
 │  └─ ui/             shared React components
 ├─ docs/              these specifications (confidential)

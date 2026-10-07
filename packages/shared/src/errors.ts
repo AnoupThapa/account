@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 /**
  * Error code catalogue — docs/error-handling.md §3.
  * Messages live here (English now; Nepali later) and are reused by API and web.

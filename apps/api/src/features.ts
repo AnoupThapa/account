@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 // Feature modules (Phase 1–2) registered here to keep app.module.ts readable.
 import { LedgerService } from './modules/ledger/ledger.service';
 import { DocumentRegistry } from './modules/approvals/documents';

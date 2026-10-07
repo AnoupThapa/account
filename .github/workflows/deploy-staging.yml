@@ -1,0 +1,26 @@
+# Deploys main to the staging server after CI passes.
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   STAGING_HOST, STAGING_USER, STAGING_SSH_KEY   — server access (SSH key, no passwords)
+#   STAGING_PATH                                   — folder on the server holding the repo, e.g. /opt/ledgerpro
+name: Deploy staging
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd ${{ secrets.STAGING_PATH }}
+            git fetch --all && git checkout main && git pull --ff-only
+            cd infra && docker compose up -d --build
+            docker compose ps

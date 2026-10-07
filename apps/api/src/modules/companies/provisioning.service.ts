@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 import { Injectable } from '@nestjs/common';
 import { AppError, DEFAULT_ROLES, DOC_TYPES, todayAd, companyCreateSchema } from '@ledgerpro/shared';
 import { buildCoaTemplate, DEFAULT_TAX_CODES, DEFAULT_TDS_CODES, BusinessType } from '@ledgerpro/db';

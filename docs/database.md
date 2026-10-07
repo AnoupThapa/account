@@ -324,7 +324,7 @@ CREATE POLICY tenant_isolation ON journal_lines
 | `ledger_readonly` | SELECT only | Reporting, BI tools, auditors' exports |
 
 ## 11. Migrations policy
-- Prisma Migrate, every change via a reviewed migration file in Git; never manual changes in production.
+- Forward-only SQL migrations in `packages/db/migrations` (run by `pnpm db:migrate`, checksum-protected: an applied migration can never be edited); every change via a reviewed migration file in Git; never manual changes in production.
 - Migrations are forward-only and backward-compatible (expand → migrate data → contract) to allow zero-downtime deploys.
 - Automatic backup immediately before each production migration.
 

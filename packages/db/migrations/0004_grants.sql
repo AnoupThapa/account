@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 -- Database roles & least-privilege grants (database.md §10).
 -- ledger_app: used by API & worker; no UPDATE/DELETE on ledger lines or audit log; RLS applies (not owner).
 -- ledger_readonly: SELECT only (reporting/BI/auditor exports).

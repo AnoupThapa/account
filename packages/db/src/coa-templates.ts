@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 /**
  * Chart-of-accounts templates — docs/02 §3.1. The Mixed/Nepal template is the master list;
  * Service, Trading and Manufacturing are subsets (column `in`). IFRS variant renames a few

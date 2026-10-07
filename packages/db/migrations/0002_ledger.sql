@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 -- Phase 1 — Core ledger: chart of accounts, cost centres, contacts, tax codes & rates, TDS codes,
 -- journal entries/lines with DB-level guarantees, posting rules, balances, maker–checker,
 -- manual journals, opening balances. See docs/02-accounting-rules.md and docs/database.md §3.

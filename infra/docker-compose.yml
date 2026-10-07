@@ -1,0 +1,49 @@
+# LedgerPro — local / single-server deployment.
+#   cd infra && docker compose up -d --build
+# Then open http://localhost:3000   (demo data:  docker compose run --rm api node dist/scripts/seed-demo.js)
+name: ledgerpro
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres_dev_only}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 5s, retries: 20 }
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+  migrate:
+    build: { context: .., target: migrate }
+    environment:
+      DATABASE_ADMIN_URL: postgres://ledger_owner:${LEDGER_OWNER_PASSWORD:-ledger_owner_dev}@postgres:5432/ledgerpro
+    depends_on: { postgres: { condition: service_healthy } }
+  api:
+    build: { context: .., target: api }
+    env_file: [../.env]
+    environment:
+      DATABASE_URL: postgres://ledger_app:${LEDGER_APP_PASSWORD:-ledger_app_dev}@postgres:5432/ledgerpro
+      DATABASE_ADMIN_URL: postgres://ledger_owner:${LEDGER_OWNER_PASSWORD:-ledger_owner_dev}@postgres:5432/ledgerpro
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on: { migrate: { condition: service_completed_successfully }, redis: { condition: service_started } }
+    restart: unless-stopped
+  worker:
+    build: { context: .., target: worker }
+    env_file: [../.env]
+    environment:
+      DATABASE_URL: postgres://ledger_app:${LEDGER_APP_PASSWORD:-ledger_app_dev}@postgres:5432/ledgerpro
+      REDIS_URL: redis://redis:6379
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    restart: unless-stopped
+  web:
+    build: { context: .., target: web }
+    environment:
+      API_INTERNAL_URL: http://api:4000
+    ports: ["3000:3000"]
+    depends_on: [api]
+    restart: unless-stopped
+volumes:
+  pgdata:

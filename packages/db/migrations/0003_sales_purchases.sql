@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 -- Phase 2 — Sales & purchases: items, quotations, sales orders, invoices, credit notes, receipts,
 -- customer advances, POs, goods receipts, bills, debit notes, payments, expenses & claims, allocations.
 

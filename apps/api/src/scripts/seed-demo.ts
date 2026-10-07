@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 /**
  * DEMO DATA (local/staging only): an owner super-admin, a Nepal company and an Australian company,
  * demo users for each role, a few customers, suppliers and items. Safe to run twice.

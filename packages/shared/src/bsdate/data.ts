@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 // BS month lengths 2000–2100 BS. Source: nepali-date-converter@3.4.0 (MIT) for 2000–2090,
 // cross-checked with nepali-date-library (MIT) and bikram-sambat (Apache-2.0); 2091–2100 from nepali-date-library.
 // Years from 2084 onward are PROVISIONAL (sources disagree / not yet officially published) and must be

@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 // End-to-end smoke test of the main flow through the real UI (Phase 9 expands this into a full suite).
 // Usage: BASE_URL=http://localhost:3000 CHROMIUM_PATH=... node e2e/smoke.mjs   (needs demo data: pnpm seed:demo)
 import { chromium } from 'playwright-core';
@@ -31,6 +37,8 @@ try {
   await shot(maker, '01-home');
   await maker.goto(BASE + '/docs/sales-invoices/new');
   await maker.waitForSelector('text=Customer *');
+  await maker.waitForFunction(() => [...document.querySelectorAll('select')].some((s) => [...s.options].some((o) => o.text.includes('Himalayan'))));
+  await maker.waitForFunction(() => [...document.querySelectorAll('tbody select')].some((s) => [...s.options].some((o) => o.text.includes('GLV-100'))));
   const custOpt = await maker.$eval('select >> nth=1', (s) => [...s.options].find((o) => o.text.includes('Himalayan'))?.value);
   await maker.selectOption('select >> nth=1', custOpt);
   const itemSel = maker.locator('tbody select').first();

@@ -1,7 +1,18 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const api = process.env.API_INTERNAL_URL || 'http://localhost:4000';
 const nextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: path.join(here, '../../'),
   poweredByHeader: false,
   transpilePackages: ['@ledgerpro/shared'],
   // Same-origin API: the browser calls /api/*, Next forwards to the NestJS API (cookies stay SameSite=Strict)

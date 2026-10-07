@@ -1,3 +1,9 @@
+/*
+ * LedgerPro
+ * Copyright (c) 2026 Anoup Kumar Thapa. All rights reserved.
+ * PROPRIETARY AND CONFIDENTIAL. Unauthorised copying, use or distribution
+ * of this file, via any medium, is strictly prohibited. See LICENSE.
+ */
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
 import { AppError, setBsCalendar, BS_MONTH_DAYS } from '@ledgerpro/shared';

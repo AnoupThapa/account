@@ -41,7 +41,7 @@ Non-negotiable rules:
 ```
 Implement Phase 0 from docs/phases.md.
 Set up the pnpm + Turborepo monorepo exactly as in architecture.md §4 (apps/web Next.js,
-apps/api NestJS, apps/worker BullMQ, packages/db Prisma, packages/shared, packages/ui),
+apps/api NestJS, apps/worker BullMQ, packages/db (Kysely + SQL migrations), packages/shared, packages/ui),
 Docker Compose for local dev (Postgres 16, Redis), GitHub Actions CI (lint, typecheck, test,
 build) and staging deploy workflow (leave secrets as placeholders and tell me what to add).
 Build: auth (Argon2id, TOTP 2FA, refresh-token rotation, lockout), companies, branches,
