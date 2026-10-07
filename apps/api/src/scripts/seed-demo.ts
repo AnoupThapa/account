@@ -21,7 +21,9 @@ import type { RequestContext } from '../common/context';
 const PASSWORD = process.env.DEMO_PASSWORD || 'Demo-Ledger-2026!';
 
 async function main() {
-  if (process.env.NODE_ENV === 'production') throw new Error('Refusing to load demo data in production');
+  if (process.env.NODE_ENV === 'production' && process.env.LOAD_DEMO_DATA !== 'true') {
+    throw new Error('Refusing to load demo data in production (set LOAD_DEMO_DATA=true only on a trial server)');
+  }
   const app = await createApp();
   const dbs = app.get(DatabaseService);
   const prov = app.get(ProvisioningService);

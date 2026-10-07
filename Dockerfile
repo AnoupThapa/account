@@ -1,4 +1,4 @@
-# LedgerPro — one Dockerfile, three runtime targets: api, worker, web
+# LedgerPro — one Dockerfile, runtime targets: migrate, worker, web, api (default = last = api)
 # Build:  docker build --target api -t ledgerpro-api .
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
@@ -24,17 +24,6 @@ COPY --from=build /out/db /app
 USER node
 CMD ["node", "-e", "require('./dist').runMigrations(process.env.DATABASE_ADMIN_URL).then(()=>require('./dist').seedGlobal(process.env.DATABASE_ADMIN_URL)).then(()=>console.log('migrations done')).catch(e=>{console.error(e.message);process.exit(1)})"]
 
-# API (includes Chromium for invoice PDFs)
-FROM node:22-bookworm-slim AS api
-RUN apt-get update && apt-get install -y --no-install-recommends chromium fonts-noto-core fonts-noto-ui-core && rm -rf /var/lib/apt/lists/*
-ENV NODE_ENV=production CHROMIUM_PATH=/usr/bin/chromium
-WORKDIR /app
-COPY --from=build /out/api /app
-USER node
-EXPOSE 4000
-HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://localhost:4000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "dist/main.js"]
-
 FROM node:22-bookworm-slim AS worker
 ENV NODE_ENV=production
 WORKDIR /app
@@ -50,3 +39,16 @@ COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 USER node
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
+
+# Kept LAST on purpose: hosts that build a Dockerfile without choosing a target (e.g. Render) get the API.
+# API (includes Chromium for invoice PDFs)
+FROM node:22-bookworm-slim AS api
+RUN apt-get update && apt-get install -y --no-install-recommends chromium fonts-noto-core fonts-noto-ui-core && rm -rf /var/lib/apt/lists/*
+ENV NODE_ENV=production CHROMIUM_PATH=/usr/bin/chromium
+WORKDIR /app
+COPY --from=build /out/api /app
+USER node
+EXPOSE 4000
+HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://localhost:'+(process.env.API_PORT||process.env.PORT||4000)+'/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# cloud-start: on hosts like Render+Neon it prepares the database first (see src/scripts/cloud-start.ts)
+CMD ["node", "dist/scripts/cloud-start.js"]

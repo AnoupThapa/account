@@ -25,6 +25,17 @@ What the start file sets up for this PC only (in the `.env` file it creates): ne
 
 If something fails, the window says **PROBLEM:** and what to do; if it isn't clear, copy the messages into a Claude session.
 
+## A3. Online (free trial): Vercel (website) + Render (server) + Neon (database)
+
+- **Neon:** create a project (region Sydney or Singapore). Nothing else to do there — the server creates its tables itself.
+- **Render** (Web Service from the GitHub repo, runtime *Docker*, default Dockerfile — its last stage is the API). Environment variables:
+  - `DATABASE_ADMIN_URL` = the Neon connection string (Neon → Connect; the `neondb_owner` one).
+  - `LOAD_DEMO_DATA` = `true` (trial only: loads the demo companies/users; remove it before real use).
+  - Optional but recommended: `JWT_ACCESS_SECRET` and `ENCRYPTION_KEY` (Render → *Generate*; ENCRYPTION_KEY must be 32 bytes base64). If left out they are derived from the database password — changing that password later would then sign everyone out and require 2FA to be set up again.
+  - Do **not** set `DATABASE_URL` to the owner string: on start the server creates a restricted `ledger_app` login so row-level security applies (`apps/api/src/scripts/cloud-start.ts`).
+- **Vercel** (project root `apps/web`): environment variable `API_INTERNAL_URL` = the Render address (e.g. `https://accfinx.onrender.com`), then **Redeploy** (it is baked in at build time).
+- The free Render server sleeps after 15 minutes; the first visit afterwards takes about a minute.
+
 ## A2. Alternative: Docker Desktop
 
 1. Install **Docker Desktop** for Windows (docker.com → Download → Windows). Start it and wait until it says *Engine running*.

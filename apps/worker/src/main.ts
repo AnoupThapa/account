@@ -15,7 +15,8 @@ import pino from 'pino';
  *  - integrity: nightly checks (database.md §6) per company — ledger balances, snapshots, audit hash chain
  */
 const log = pino({ base: { service: 'ledgerpro-worker' } });
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5, idleTimeoutMillis: 30_000 });
+pool.on('error', (err) => console.warn('[db] idle connection closed by server:', err.message));
 const redisUrl = new URL(process.env.REDIS_URL || 'redis://localhost:6379');
 const connection = { host: redisUrl.hostname, port: Number(redisUrl.port || 6379), password: redisUrl.password || undefined, maxRetriesPerRequest: null };
 const BACKOFF_MIN = [1, 5, 30, 120, 720];
