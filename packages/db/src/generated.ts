@@ -1177,6 +1177,7 @@ export interface Sessions {
   refresh_hash: string;
   revoke_reason: string | null;
   revoked_at: Timestamp | null;
+  step_up_at: Timestamp | null;
   user_agent: string | null;
   user_id: string;
 }
@@ -1258,6 +1259,7 @@ export interface Users {
   mfa_pending_secret_enc: string | null;
   mfa_recovery_hashes: Generated<Json>;
   mfa_secret_enc: string | null;
+  must_change_password: Generated<boolean>;
   password_changed_at: Generated<Timestamp>;
   password_hash: string;
   updated_at: Generated<Timestamp>;

@@ -100,7 +100,8 @@ export const ALL_PERMISSIONS = Object.keys(PERMISSIONS);
 
 const viewAllReports = REPORTS.map((r) => `report.${r}.view`);
 const exportAllReports = REPORTS.map((r) => `report.${r}.export`);
-const allDocs = Object.values(DOC_TYPES).map((d) => d.perm);
+const uniq = <T>(a: T[]) => [...new Set(a)];
+const allDocs = uniq(Object.values(DOC_TYPES).map((d) => d.perm));
 const allNonPosting = Object.values(NONPOSTING_DOC_TYPES).map((d) => d.perm);
 
 export interface RoleTemplate {
@@ -112,7 +113,7 @@ export interface RoleTemplate {
 }
 
 /** Default roles (docs/06 §2). Editable per company after creation. */
-export const DEFAULT_ROLES: RoleTemplate[] = [
+const RAW_ROLES: RoleTemplate[] = [
   {
     key: 'COMPANY_ADMIN',
     name: 'Company Admin',
@@ -217,3 +218,6 @@ export const DEFAULT_ROLES: RoleTemplate[] = [
     permissions: ['report.trial_balance.view'],
   },
 ];
+
+/** Default roles (docs/06 §2) with de-duplicated permission lists. */
+export const DEFAULT_ROLES: RoleTemplate[] = RAW_ROLES.map((r) => ({ ...r, permissions: uniq(r.permissions).filter((p) => p in PERMISSIONS) }));
