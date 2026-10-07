@@ -44,9 +44,11 @@
     "JWT_ACCESS_SECRET",
     "ENCRYPTION_KEY",
     "CHROMIUM_PATH",
-    "API_INTERNAL_URL",
-    "NODE_ENV",
-    "NEXT_STANDALONE",
     "NEXT_TELEMETRY_DISABLED"
+  ],
+  "globalEnv": [
+    "API_INTERNAL_URL",
+    "NEXT_STANDALONE",
+    "NODE_ENV"
   ]
 }
