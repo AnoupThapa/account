@@ -92,3 +92,4 @@ Public API & webhooks, NRB exchange rates, payment gateways (eSewa/Khalti/Fonepa
 ## PROPOSED additions (not approved — see docs/12 and docs/13)
 - **Phase 4A — Go-to-market basics:** recurring documents, auto-reminders, import wizard (Tally/Excel/CSV), invoice branding, notification centre, CI/Docker proven.
 - **Phase 5A — Attendance, Leave & Payroll-ready (A1 → A3):** see docs/13. Do not start until the owner approves.
+- **Phase 2B — Tax engine v2 (PROPOSED, before Phase 3):** global tax regimes/packs, custom tax-system builder, compound taxes, taxable/non-taxable options on items, bills and uploads — see docs/14. Do not start until the owner approves.

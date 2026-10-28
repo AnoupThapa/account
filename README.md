@@ -55,6 +55,7 @@ docs/         specification + phase reports
 | [11 Open Questions](docs/11-roadmap-open-questions.md) | Decisions needed before build |
 | [12 Competitive Review](docs/12-competitive-gap-analysis.md) | PROPOSED: gaps vs Zoho/Xero/QuickBooks and improvement plan |
 | [13 Attendance & HR](docs/13-attendance-hr.md) | PROPOSED: attendance, leave, overtime, payroll-ready module |
+| [14 Global Tax Systems](docs/14-global-tax-systems.md) | PROPOSED: tax-system picker/builder, compound taxes, taxable/non-taxable options |
 | [ip-protection.md](docs/ip-protection.md) | Copyright, trademark, confidentiality, contracts, customer licensing |
 
 ## Recommended stack (summary)
