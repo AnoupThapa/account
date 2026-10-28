@@ -1,4 +1,4 @@
-# 13 — Attendance, Leave & Payroll-ready Module (PROPOSED — awaiting owner approval)
+# 13 — Attendance, Leave & Payroll-ready Module (APPROVED 2026-10-28 — build after Phase 2B)
 
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. Do not copy or share without written permission. See [LICENSE](../LICENSE).
 

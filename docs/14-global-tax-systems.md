@@ -1,4 +1,4 @@
-# 14 — Global Tax Systems & Taxable / Non-taxable Choices (PROPOSED — awaiting owner approval)
+# 14 — Global Tax Systems & Taxable / Non-taxable Choices (APPROVED 2026-10-28 — Phase 2B in progress)
 
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. Do not copy or share without written permission. See [LICENSE](../LICENSE).
 
