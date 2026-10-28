@@ -247,6 +247,9 @@ export interface Companies {
   pan: string | null;
   phone: string | null;
   self_approval_allowed: Generated<boolean>;
+  tax_id: string | null;
+  tax_override_reason_required: Generated<boolean>;
+  tax_regime_id: string | null;
   tax_rounding: Generated<string>;
   timezone: Generated<string>;
   updated_at: Generated<Timestamp>;
@@ -272,6 +275,7 @@ export interface Contacts {
   pan: string | null;
   payment_terms_days: Generated<number>;
   phone: string | null;
+  tax_id: string | null;
   type: string;
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
@@ -338,7 +342,9 @@ export interface CreditNoteLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -411,7 +417,9 @@ export interface DebitNoteLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -479,7 +487,9 @@ export interface ExpenseLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -612,7 +622,9 @@ export interface Items {
   is_stock_tracked: Generated<boolean>;
   name: string;
   purchase_account_id: string | null;
+  purchase_default_tax_code_id: string | null;
   purchase_price: Generated<Numeric>;
+  purchase_tax_applicability: string | null;
   reorder_level: Numeric | null;
   sales_account_id: string | null;
   sales_price: Generated<Numeric>;
@@ -838,7 +850,9 @@ export interface PurchaseBillLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -912,7 +926,9 @@ export interface PurchaseOrderLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -1018,7 +1034,9 @@ export interface SalesInvoiceLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -1090,7 +1108,9 @@ export interface SalesOrderLines {
   project_id: string | null;
   quantity: Generated<Numeric>;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -1137,7 +1157,9 @@ export interface SalesQuoteLines {
   quantity: Generated<Numeric>;
   quote_id: string;
   tax_amount: Generated<Numeric>;
+  tax_breakdown: Json | null;
   tax_code_id: string | null;
+  tax_override_reason: string | null;
   tax_rate: Generated<Numeric>;
   tax_type: Generated<string>;
   total_amount: Generated<Numeric>;
@@ -1183,6 +1205,15 @@ export interface Sessions {
   user_id: string;
 }
 
+export interface TaxCodeComponents {
+  company_id: string;
+  component_id: string;
+  group_id: string;
+  id: Generated<string>;
+  seq: number;
+  stacked: Generated<boolean>;
+}
+
 export interface TaxCodes {
   code: string;
   company_id: string;
@@ -1192,8 +1223,10 @@ export interface TaxCodes {
   input_account_id: string | null;
   is_active: Generated<boolean>;
   is_claimable: Generated<boolean>;
+  is_group: Generated<boolean>;
   name: string;
   output_account_id: string | null;
+  regime_id: string | null;
   type: string;
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
@@ -1209,6 +1242,30 @@ export interface TaxRates {
   id: Generated<string>;
   rate: Numeric;
   tax_code_id: string;
+}
+
+export interface TaxRegimes {
+  company_id: string;
+  country: string;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  id: Generated<string>;
+  invoice_title: Generated<string>;
+  is_active: Generated<boolean>;
+  key: string;
+  model: string;
+  name: string;
+  non_taxable_code: string | null;
+  pack_as_of: string | null;
+  pack_version: string | null;
+  prices_include_tax_default: Generated<boolean>;
+  return_period: Generated<string>;
+  source_pack: string | null;
+  tax_id_label: Generated<string>;
+  tax_label: Generated<string>;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  version: Generated<number>;
 }
 
 export interface TdsCodes {
@@ -1323,8 +1380,10 @@ export interface DB {
   sales_quote_lines: SalesQuoteLines;
   sales_quotes: SalesQuotes;
   sessions: Sessions;
+  tax_code_components: TaxCodeComponents;
   tax_codes: TaxCodes;
   tax_rates: TaxRates;
+  tax_regimes: TaxRegimes;
   tds_codes: TdsCodes;
   uoms: Uoms;
   user_companies: UserCompanies;

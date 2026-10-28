@@ -33,7 +33,8 @@ export const totpSchema = z.object({ code: z.string().regex(/^(\d{6}|[A-Z0-9]{4}
 export const companyCreateSchema = z.object({
   name: z.string().min(2).max(150),
   legalName: z.string().max(200).optional(),
-  country: z.enum(['NP', 'AU', 'OTHER']),
+  country: z.string().regex(/^([A-Z]{2}|OTHER)$/, 'Use a 2-letter country code (e.g. NP, AU, GB)'),
+  taxPack: z.string().max(40).optional(),
   baseCurrency: z.string().length(3).optional(),
   calendarMode: z.enum(['BS', 'AD']).optional(),
   fyStartMonth: z.number().int().min(1).max(12).optional(),
@@ -42,6 +43,7 @@ export const companyCreateSchema = z.object({
   pan: z.string().max(20).optional(),
   vatNo: z.string().max(20).optional(),
   abn: z.string().max(20).optional(),
+  taxId: z.string().max(30).optional(),
   address: z.string().max(500).optional(),
   phone: z.string().max(40).optional(),
   email: z.string().email().optional().or(z.literal('')),
