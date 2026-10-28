@@ -28,6 +28,7 @@ CREATE TABLE tax_regimes (
   prices_include_tax_default boolean NOT NULL DEFAULT false,
   return_period              varchar(10) NOT NULL DEFAULT 'MONTHLY' CHECK (return_period IN ('MONTHLY','QUARTERLY','ANNUAL','NONE')),
   non_taxable_code           varchar(20),                          -- tax code used for the "Non-taxable" choice
+  default_standard_code      varchar(20),                          -- code suggested for new taxable items
   source_pack                varchar(40),
   pack_version               varchar(20),
   pack_as_of                 date,
@@ -78,15 +79,16 @@ BEGIN
 END $$;
 
 -- Migrate existing companies to a regime (Nepal VAT / Australia GST / custom)
-INSERT INTO tax_regimes (company_id, key, name, country, model, tax_label, tax_id_label, invoice_title, non_taxable_code, return_period, source_pack, pack_version, pack_as_of)
+INSERT INTO tax_regimes (company_id, key, name, country, model, tax_label, tax_id_label, invoice_title, non_taxable_code, default_standard_code, return_period, source_pack, pack_version, pack_as_of)
 SELECT id,
        CASE country WHEN 'NP' THEN 'NP_VAT' WHEN 'AU' THEN 'AU_GST' ELSE 'CUSTOM' END,
        CASE country WHEN 'NP' THEN 'Nepal VAT' WHEN 'AU' THEN 'Australia GST' ELSE 'Custom tax system' END,
        country, 'CREDIT_VAT',
        CASE country WHEN 'AU' THEN 'GST' ELSE 'VAT' END,
-       CASE country WHEN 'NP' THEN 'PAN' WHEN 'AU' THEN 'ABN' ELSE 'Tax ID' END,
+       CASE country WHEN 'NP' THEN 'PAN/VAT No.' WHEN 'AU' THEN 'ABN' ELSE 'Tax ID' END,
        'Tax Invoice',
        CASE country WHEN 'NP' THEN 'EXEMPT' WHEN 'AU' THEN 'N-T' ELSE 'NONE' END,
+       CASE country WHEN 'NP' THEN 'VAT13' WHEN 'AU' THEN 'GST' ELSE 'STD' END,
        CASE country WHEN 'AU' THEN 'QUARTERLY' ELSE 'MONTHLY' END,
        CASE country WHEN 'NP' THEN 'NP_VAT' WHEN 'AU' THEN 'AU_GST' END,
        CASE WHEN country IN ('NP','AU') THEN '2026.1' END,

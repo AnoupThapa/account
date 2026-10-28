@@ -16,6 +16,16 @@ const CURRENCIES = [
   ['EUR', 'Euro', '€'],
   ['GBP', 'Pound Sterling', '£'],
   ['CNY', 'Chinese Yuan', '¥'],
+  ['NZD', 'New Zealand Dollar', 'NZ$'], ['SGD', 'Singapore Dollar', 'S$'], ['CAD', 'Canadian Dollar', 'C$'], ['AED', 'UAE Dirham', 'AED'],
+  ['ZAR', 'South African Rand', 'R'], ['SEK', 'Swedish Krona', 'kr'], ['DKK', 'Danish Krone', 'kr'], ['NOK', 'Norwegian Krone', 'kr'],
+  ['PLN', 'Polish Zloty', 'zł'], ['CHF', 'Swiss Franc', 'CHF'], ['TRY', 'Turkish Lira', '₺'], ['MYR', 'Malaysian Ringgit', 'RM'],
+  ['IDR', 'Indonesian Rupiah', 'Rp'], ['THB', 'Thai Baht', '฿'], ['PHP', 'Philippine Peso', '₱'], ['VND', 'Vietnamese Dong', '₫'],
+  ['LKR', 'Sri Lankan Rupee', 'Rs'], ['BDT', 'Bangladeshi Taka', '৳'], ['PKR', 'Pakistani Rupee', 'Rs'], ['BTN', 'Bhutanese Ngultrum', 'Nu.'],
+  ['JPY', 'Japanese Yen', '¥'], ['KRW', 'South Korean Won', '₩'], ['HKD', 'Hong Kong Dollar', 'HK$'], ['SAR', 'Saudi Riyal', 'SAR'],
+  ['QAR', 'Qatari Riyal', 'QAR'], ['KWD', 'Kuwaiti Dinar', 'KWD'], ['OMR', 'Omani Rial', 'OMR'], ['BHD', 'Bahraini Dinar', 'BHD'],
+  ['EGP', 'Egyptian Pound', 'E£'], ['NGN', 'Nigerian Naira', '₦'], ['KES', 'Kenyan Shilling', 'KSh'], ['GHS', 'Ghanaian Cedi', 'GH₵'],
+  ['TZS', 'Tanzanian Shilling', 'TSh'], ['MXN', 'Mexican Peso', 'MX$'], ['BRL', 'Brazilian Real', 'R$'], ['ARS', 'Argentine Peso', 'AR$'],
+  ['CLP', 'Chilean Peso', 'CLP$'], ['COP', 'Colombian Peso', 'COL$'],
 ];
 const UOMS = [
   ['PCS', 'Pieces'], ['BOX', 'Box'], ['CTN', 'Carton'], ['PKT', 'Packet'], ['KG', 'Kilogram'], ['G', 'Gram'],

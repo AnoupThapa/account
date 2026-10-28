@@ -35,6 +35,8 @@ export interface TaxPack {
   returnPeriod: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'NONE';
   /** code used when a user picks "Non-taxable" on a line */
   nonTaxableCode: string;
+  /** code suggested for new taxable items (blank = none) */
+  defaultStandardCode: string;
   version: string;
   asOf: string;
   notes: string;
@@ -51,7 +53,7 @@ const base = { version: '2026.1', asOf: '2026-10-01', pricesIncludeTax: false };
 
 export const TAX_PACKS: TaxPack[] = [
   {
-    ...base, key: 'NP_VAT', name: 'Nepal VAT', country: 'NP', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'PAN', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'EXEMPT',
+    ...base, key: 'NP_VAT', name: 'Nepal VAT', country: 'NP', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'PAN/VAT No.', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'EXEMPT', defaultStandardCode: 'VAT13',
     notes: 'VAT 13%. TDS codes are loaded separately for Nepal companies.',
     codes: [
       std('VAT13', 'VAT 13%', '13'),
@@ -62,22 +64,22 @@ export const TAX_PACKS: TaxPack[] = [
     ],
   },
   {
-    ...base, key: 'AU_GST', name: 'Australia GST', country: 'AU', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'ABN', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'N-T',
+    ...base, key: 'AU_GST', name: 'Australia GST', country: 'AU', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'ABN', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'N-T', defaultStandardCode: 'GST',
     notes: 'GST 10%. Management tracking only — BAS lodgement is outside LedgerPro.',
     codes: [std('GST', 'GST 10%', '10'), zero('FRE', 'GST-free'), exempt('INP', 'Input-taxed'), oos('N-T', 'Not reportable (out of scope)')],
   },
   {
-    ...base, key: 'GB_VAT', name: 'United Kingdom VAT', country: 'GB', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'VAT Reg No', invoiceTitle: 'VAT Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OUTSCOPE',
+    ...base, key: 'GB_VAT', name: 'United Kingdom VAT', country: 'GB', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'VAT Reg No', invoiceTitle: 'VAT Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OUTSCOPE', defaultStandardCode: 'VAT20',
     notes: 'Standard 20%, reduced 5%, zero 0%.',
     codes: [std('VAT20', 'VAT 20% (standard)', '20'), std('VAT5', 'VAT 5% (reduced)', '5'), zero('VAT0', 'VAT 0% (zero-rated)'), exempt('EXEMPT', 'VAT Exempt'), oos('OUTSCOPE', 'Outside the scope of VAT')],
   },
   {
-    ...base, key: 'NZ_GST', name: 'New Zealand GST', country: 'NZ', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'GST number', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'OUTSCOPE',
+    ...base, key: 'NZ_GST', name: 'New Zealand GST', country: 'NZ', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'GST number', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'OUTSCOPE', defaultStandardCode: 'GST15',
     notes: 'GST 15%.',
     codes: [std('GST15', 'GST 15%', '15'), zero('GST0', 'GST 0% (zero-rated)'), exempt('EXEMPT', 'Exempt supply'), oos('OUTSCOPE', 'Outside the scope of GST')],
   },
   {
-    ...base, key: 'IN_GST', name: 'India GST', country: 'IN', model: 'COMPOUND', taxLabel: 'GST', taxIdLabel: 'GSTIN', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'NOGST',
+    ...base, key: 'IN_GST', name: 'India GST', country: 'IN', model: 'COMPOUND', taxLabel: 'GST', taxIdLabel: 'GSTIN', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'NOGST', defaultStandardCode: 'GST18',
     notes: 'Slabs 5% / 18% / 40% (from 22 Sep 2025). Intra-state supplies use CGST+SGST (two components); inter-state use IGST. Cess and special rates: add codes in Settings → Tax system.',
     codes: [
       std('CGST2.5', 'CGST 2.5%', '2.5'), std('SGST2.5', 'SGST 2.5%', '2.5'),
@@ -91,22 +93,22 @@ export const TAX_PACKS: TaxPack[] = [
     ],
   },
   {
-    ...base, key: 'SG_GST', name: 'Singapore GST', country: 'SG', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'GST Reg No', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS',
+    ...base, key: 'SG_GST', name: 'Singapore GST', country: 'SG', model: 'CREDIT_VAT', taxLabel: 'GST', taxIdLabel: 'GST Reg No', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS', defaultStandardCode: 'SR',
     notes: 'GST 9%.',
     codes: [std('SR', 'GST 9% (standard-rated)', '9'), zero('ZR', 'GST 0% (zero-rated)'), exempt('ES', 'Exempt supply'), oos('OOS', 'Out of scope')],
   },
   {
-    ...base, key: 'AE_VAT', name: 'UAE VAT', country: 'AE', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'TRN', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS',
+    ...base, key: 'AE_VAT', name: 'UAE VAT', country: 'AE', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'TRN', invoiceTitle: 'Tax Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS', defaultStandardCode: 'VAT5',
     notes: 'VAT 5%.',
     codes: [std('VAT5', 'VAT 5%', '5'), zero('VAT0', 'VAT 0% (zero-rated)'), exempt('EXEMPT', 'Exempt'), oos('OOS', 'Out of scope')],
   },
   {
-    ...base, key: 'ZA_VAT', name: 'South Africa VAT', country: 'ZA', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'VAT number', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'OOS',
+    ...base, key: 'ZA_VAT', name: 'South Africa VAT', country: 'ZA', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'VAT number', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'OOS', defaultStandardCode: 'VAT15',
     notes: 'VAT 15%.',
     codes: [std('VAT15', 'VAT 15%', '15'), zero('VAT0', 'VAT 0% (zero-rated)'), exempt('EXEMPT', 'Exempt'), oos('OOS', 'Out of scope')],
   },
   {
-    ...base, key: 'CA_GST', name: 'Canada GST / HST / PST / QST', country: 'CA', model: 'COMPOUND', taxLabel: 'GST/HST', taxIdLabel: 'BN / GST-HST no.', invoiceTitle: 'Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS',
+    ...base, key: 'CA_GST', name: 'Canada GST / HST / PST / QST', country: 'CA', model: 'COMPOUND', taxLabel: 'GST/HST', taxIdLabel: 'BN / GST-HST no.', invoiceTitle: 'Invoice', returnPeriod: 'QUARTERLY', nonTaxableCode: 'OOS', defaultStandardCode: 'GST5',
     notes: 'Federal GST 5%; HST by province (ON 13%, Atlantic provinces 15%); GST+PST in BC / SK / MB; GST+QST in Québec. PST/RST is not recoverable. Provincial rates change — confirm before use.',
     codes: [
       std('GST5', 'GST 5% (federal)', '5'), std('HST13', 'HST 13% (Ontario)', '13'), std('HST15', 'HST 15% (Atlantic provinces)', '15'),
@@ -120,17 +122,17 @@ export const TAX_PACKS: TaxPack[] = [
     ],
   },
   {
-    ...base, key: 'US_SALES_TAX', name: 'United States sales tax (rate table)', country: 'US', model: 'SALES_TAX', taxLabel: 'Sales Tax', taxIdLabel: 'EIN', invoiceTitle: 'Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'EXEMPT',
+    ...base, key: 'US_SALES_TAX', name: 'United States sales tax (rate table)', country: 'US', model: 'SALES_TAX', taxLabel: 'Sales Tax', taxIdLabel: 'EIN', invoiceTitle: 'Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'EXEMPT', defaultStandardCode: 'SALESTAX',
     notes: 'US sales tax varies by state, county and city. Create one code per jurisdiction you collect in (Settings → Tax system → Add code) or a group of state+local codes. Rates start at 0% until you set them. Tax paid on purchases is not recoverable and is added to cost.',
     codes: [std('SALESTAX', 'Sales tax (set your rate)', '0', false), exempt('EXEMPT', 'Exempt / resale'), oos('NONTAX', 'Non-taxable')],
   },
   {
-    ...base, key: 'GENERIC_VAT', name: 'Generic VAT / GST (set your own rate)', country: 'OTHER', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'Tax ID', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'NONE',
+    ...base, key: 'GENERIC_VAT', name: 'Generic VAT / GST (set your own rate)', country: 'OTHER', model: 'CREDIT_VAT', taxLabel: 'VAT', taxIdLabel: 'Tax ID', invoiceTitle: 'Tax Invoice', returnPeriod: 'MONTHLY', nonTaxableCode: 'NONE', defaultStandardCode: 'STD',
     notes: 'Starter codes for any country with a VAT/GST. Set the standard rate after applying.',
     codes: [std('STD', 'Standard rate (set your rate)', '0'), zero('ZERO', 'Zero-rated'), exempt('EXEMPT', 'Exempt'), oos('NONE', 'Out of scope')],
   },
   {
-    ...base, key: 'NO_TAX', name: 'No indirect tax', country: 'OTHER', model: 'NONE', taxLabel: 'Tax', taxIdLabel: 'Tax ID', invoiceTitle: 'Invoice', returnPeriod: 'NONE', nonTaxableCode: 'NONE',
+    ...base, key: 'NO_TAX', name: 'No indirect tax', country: 'OTHER', model: 'NONE', taxLabel: 'Tax', taxIdLabel: 'Tax ID', invoiceTitle: 'Invoice', returnPeriod: 'NONE', nonTaxableCode: 'NONE', defaultStandardCode: '',
     notes: 'For businesses or jurisdictions without VAT/sales tax.',
     codes: [oos('NONE', 'No tax')],
   },
@@ -164,5 +166,6 @@ export function validatePack(p: TaxPack): string[] {
     if (c.group && c.group.length < 2) errs.push(`${c.code}: a group needs at least 2 components`);
   }
   if (!codes.has(p.nonTaxableCode)) errs.push(`nonTaxableCode ${p.nonTaxableCode} missing`);
+  if (p.defaultStandardCode && !codes.has(p.defaultStandardCode)) errs.push(`defaultStandardCode ${p.defaultStandardCode} missing`);
   return errs;
 }

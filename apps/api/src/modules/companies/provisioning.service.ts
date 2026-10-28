@@ -5,13 +5,14 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE.
  */
 import { Injectable } from '@nestjs/common';
-import { AppError, DEFAULT_ROLES, DOC_TYPES, todayAd, companyCreateSchema } from '@ledgerpro/shared';
-import { buildCoaTemplate, DEFAULT_TAX_CODES, DEFAULT_TDS_CODES, BusinessType } from '@ledgerpro/db';
+import { AppError, DEFAULT_ROLES, DOC_TYPES, todayAd, companyCreateSchema, countryDefaults, packForCountry, TAX_PACK_BY_KEY } from '@ledgerpro/shared';
+import { buildCoaTemplate, DEFAULT_TDS_CODES, BusinessType } from '@ledgerpro/db';
 import { z } from 'zod';
 import { DatabaseService, setTenant, Tx } from '../../common/database.service';
 import { AuditService } from '../../common/audit.service';
 import type { RequestContext } from '../../common/context';
 import { FiscalService } from '../settings/fiscal.service';
+import { TaxService } from '../tax/tax.controller';
 
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema> & { adminUserIds?: string[] };
 
@@ -21,17 +22,16 @@ const TWO_STEP_DOCS = ['PAYMENT', 'PURCHASE_BILL', 'MANUAL_JOURNAL', 'EXPENSE', 
 
 @Injectable()
 export class ProvisioningService {
-  constructor(private readonly dbs: DatabaseService, private readonly audit: AuditService, private readonly fiscal: FiscalService) {}
+  constructor(private readonly dbs: DatabaseService, private readonly audit: AuditService, private readonly fiscal: FiscalService, private readonly tax: TaxService) {}
 
   /** Create a company with branch, roles, COA, tax codes, workflows and its first fiscal year (Phase 0/1). */
   async createCompany(ctx: RequestContext, input: CompanyCreateInput) {
     if (!ctx.isSuperAdmin) throw new AppError('PERM_DENIED', 'Only a platform Super Admin can create companies');
     const country = input.country;
-    const defaults = {
-      NP: { currency: 'NPR', calendar: 'BS', fyStart: 4, tz: 'Asia/Kathmandu' },
-      AU: { currency: 'AUD', calendar: 'AD', fyStart: 7, tz: 'Australia/Sydney' },
-      OTHER: { currency: 'USD', calendar: 'AD', fyStart: 1, tz: 'UTC' },
-    }[country];
+    const cd = countryDefaults(country);
+    const defaults = { currency: cd.currency, calendar: cd.calendar, fyStart: cd.fyStartMonth, tz: cd.timezone };
+    const pack = input.taxPack ? TAX_PACK_BY_KEY[input.taxPack] : packForCountry(country);
+    if (!pack) throw new AppError('VAL_FIELD', 'Unknown tax pack', undefined, [{ field: 'taxPack', message: 'Unknown tax pack' }]);
 
     return this.dbs.platform(ctx.userId, null, async (trx) => {
       const company = await trx
@@ -48,6 +48,7 @@ export class ProvisioningService {
           pan: input.pan ?? null,
           vat_no: input.vatNo ?? null,
           abn: input.abn ?? null,
+          tax_id: input.taxId ?? null,
           address: input.address ?? null,
           phone: input.phone ?? null,
           email: input.email || null,
@@ -83,7 +84,7 @@ export class ProvisioningService {
       }
 
       const accountIds = await this.loadCoa(trx, company.id, company.business_type as BusinessType, company.coa_template as 'NEPAL' | 'IFRS', ctx.userId);
-      await this.loadTax(trx, company.id, country, accountIds, ctx.userId);
+      await this.loadTax(trx, company.id, country, pack, accountIds, ctx.userId);
       await this.loadWorkflows(trx, company.id, country, roleIds, ctx.userId);
       await this.fiscal.ensureFiscalYear(trx, cctx, input.firstFiscalYearDate ?? todayAd(company.timezone));
 
@@ -122,24 +123,8 @@ export class ProvisioningService {
     return byKey;
   }
 
-  private async loadTax(trx: Tx, companyId: string, country: 'NP' | 'AU' | 'OTHER', acct: Record<string, string>, userId: string) {
-    for (const t of DEFAULT_TAX_CODES[country]) {
-      const tc = await trx
-        .insertInto('tax_codes')
-        .values({
-          company_id: companyId,
-          code: t.code,
-          name: t.name,
-          type: t.type,
-          output_account_id: acct.OUTPUT_TAX,
-          input_account_id: acct.INPUT_TAX,
-          is_claimable: t.claimable,
-          created_by: userId,
-        })
-        .returning('id')
-        .executeTakeFirstOrThrow();
-      await trx.insertInto('tax_rates').values({ company_id: companyId, tax_code_id: tc.id, rate: t.rate, effective_from: '1943-04-14', created_by: userId }).execute();
-    }
+  private async loadTax(trx: Tx, companyId: string, country: string, pack: Parameters<TaxService['applyPack']>[3], acct: Record<string, string>, userId: string) {
+    await this.tax.applyPack(trx, companyId, userId, pack, { output: acct.OUTPUT_TAX, input: acct.INPUT_TAX });
     if (country === 'NP') {
       for (const t of DEFAULT_TDS_CODES) {
         await trx
@@ -161,7 +146,7 @@ export class ProvisioningService {
       if (TWO_STEP_DOCS.includes(docType)) {
         await trx
           .insertInto('approval_steps')
-          .values({ company_id: companyId, workflow_id: wf.id, step_no: 2, name: 'Finance Manager approval', role_id: roles.FINANCE_MANAGER, min_amount: SECOND_STEP_THRESHOLD[country] })
+          .values({ company_id: companyId, workflow_id: wf.id, step_no: 2, name: 'Finance Manager approval', role_id: roles.FINANCE_MANAGER, min_amount: SECOND_STEP_THRESHOLD[country] ?? SECOND_STEP_THRESHOLD.OTHER })
           .execute();
       }
     }

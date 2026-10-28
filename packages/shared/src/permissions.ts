@@ -139,6 +139,7 @@ const RAW_ROLES: RoleTemplate[] = [
       'contact.manage',
       'item.view',
       'item.manage',
+      'item.tax_override',
       'approval.view',
       ...allDocs.flatMap((p) => [`${p}.view`, `${p}.create`]),
       ...allNonPosting.flatMap((p) => [`${p}.view`, `${p}.create`]),

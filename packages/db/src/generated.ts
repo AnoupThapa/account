@@ -1249,6 +1249,7 @@ export interface TaxRegimes {
   country: string;
   created_at: Generated<Timestamp>;
   created_by: string | null;
+  default_standard_code: string | null;
   id: Generated<string>;
   invoice_title: Generated<string>;
   is_active: Generated<boolean>;

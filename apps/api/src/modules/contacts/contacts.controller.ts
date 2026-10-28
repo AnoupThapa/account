@@ -20,6 +20,7 @@ const contactSchema = z.object({
   pan: z.string().regex(/^\d{9}$/, 'Nepal PAN/VAT is 9 digits').nullish().or(z.literal('')),
   vatNo: z.string().max(20).nullish(),
   abn: z.string().regex(/^\d{11}$/, 'ABN is 11 digits').nullish().or(z.literal('')),
+  taxId: z.string().max(30).nullish(),
   email: z.string().email().nullish().or(z.literal('')),
   phone: z.string().max(40).nullish(),
   address: z.string().max(500).nullish(),
@@ -36,6 +37,9 @@ const itemSchema = z.object({
   uomCode: z.string().max(10).default('PCS'),
   taxApplicability: z.enum(['TAXABLE', 'ZERO_RATED', 'EXEMPT', 'OUT_OF_SCOPE']),
   defaultTaxCodeId: z.string().uuid().nullish(),
+  /** purchase side, when it differs from the sales side (omit/null = same as sales) */
+  purchaseTaxApplicability: z.enum(['TAXABLE', 'ZERO_RATED', 'EXEMPT', 'OUT_OF_SCOPE']).nullish(),
+  purchaseDefaultTaxCodeId: z.string().uuid().nullish(),
   salesPrice: zQty.default('0'),
   purchasePrice: zQty.default('0'),
   salesAccountId: z.string().uuid().nullish(),
@@ -108,6 +112,7 @@ export class ContactsController {
           pan: b.pan || null,
           vat_no: b.vatNo ?? null,
           abn: b.abn || null,
+          tax_id: b.taxId || null,
           email: b.email || null,
           phone: b.phone ?? null,
           address: b.address ?? null,
@@ -139,6 +144,7 @@ export class ContactsController {
           pan: b.pan === undefined ? before.pan : b.pan || null,
           vat_no: keep(b.vatNo, before.vat_no),
           abn: b.abn === undefined ? before.abn : b.abn || null,
+          tax_id: b.taxId === undefined ? before.tax_id : b.taxId || null,
           email: b.email === undefined ? before.email : b.email || null,
           phone: keep(b.phone, before.phone),
           address: keep(b.address, before.address),
@@ -177,26 +183,34 @@ export class ContactsController {
     return this.tx(ctx, (trx) => trx.selectFrom('uoms').selectAll().orderBy('code').execute());
   }
 
+  /** Pick / validate the tax code for an item side: TAXABLE → regime's default standard code; others → first matching code. */
+  private async resolveItemTax(trx: Tx, applicability: 'TAXABLE' | 'ZERO_RATED' | 'EXEMPT' | 'OUT_OF_SCOPE' | undefined, codeId: string | null | undefined, field: string): Promise<string | null> {
+    if (!applicability) return codeId ?? null;
+    const typeOf = { TAXABLE: 'STANDARD', ZERO_RATED: 'ZERO_RATED', EXEMPT: 'EXEMPT', OUT_OF_SCOPE: 'OUT_OF_SCOPE' } as const;
+    if (!codeId) {
+      const regime = await trx.selectFrom('companies').innerJoin('tax_regimes', 'tax_regimes.id', 'companies.tax_regime_id').select(['tax_regimes.default_standard_code', 'tax_regimes.non_taxable_code']).executeTakeFirst();
+      const preferred = applicability === 'TAXABLE' ? regime?.default_standard_code : applicability === 'EXEMPT' || applicability === 'OUT_OF_SCOPE' ? regime?.non_taxable_code : null;
+      let q = trx.selectFrom('tax_codes').select(['id', 'type']).where('type', '=', typeOf[applicability]).where('is_active', '=', true);
+      if (applicability === 'TAXABLE') q = q.where('is_claimable', '=', true);
+      const pref = preferred ? await q.where('code', '=', preferred).executeTakeFirst() : undefined;
+      codeId = pref?.id ?? (await q.orderBy('is_group', 'desc').orderBy('code').executeTakeFirst())?.id ?? null;
+    }
+    if (codeId) {
+      const tc = await trx.selectFrom('tax_codes').select('type').where('id', '=', codeId).executeTakeFirst();
+      if (!tc || tc.type !== typeOf[applicability]) throw new AppError('VAL_FIELD', 'Tax code does not match the item tax applicability', undefined, [{ field, message: 'Mismatch with tax applicability' }]);
+    }
+    return codeId;
+  }
+
   private async itemDefaults(trx: Tx, b: Partial<z.infer<typeof itemSchema>>) {
     const keys = ['SALES_GOODS', 'SALES_SERVICES', 'GENERAL_EXPENSE', 'INVENTORY', 'COGS'];
     const sys = await trx.selectFrom('accounts').select(['id', 'system_key']).where('system_key', 'in', keys).execute();
     const k = (key: string) => sys.find((s) => s.system_key === key)?.id ?? null;
     const isService = b.type === 'SERVICE';
     const stock = b.type === 'INVENTORY' || b.type === 'FINISHED_GOOD' || b.type === 'RAW_MATERIAL';
-    if (b.taxApplicability === 'TAXABLE' && !b.defaultTaxCodeId) {
-      const std = await trx.selectFrom('tax_codes').select('id').where('type', '=', 'STANDARD').where('is_claimable', '=', true).where('is_active', '=', true).orderBy('code').executeTakeFirst();
-      b.defaultTaxCodeId = std?.id ?? null;
-    }
-    if (b.taxApplicability && b.taxApplicability !== 'TAXABLE' && !b.defaultTaxCodeId) {
-      const map = { ZERO_RATED: 'ZERO_RATED', EXEMPT: 'EXEMPT', OUT_OF_SCOPE: 'OUT_OF_SCOPE' } as const;
-      const tc = await trx.selectFrom('tax_codes').select('id').where('type', '=', map[b.taxApplicability]).where('is_active', '=', true).orderBy('code').executeTakeFirst();
-      b.defaultTaxCodeId = tc?.id ?? null;
-    }
-    if (b.defaultTaxCodeId) {
-      const tc = await trx.selectFrom('tax_codes').select('type').where('id', '=', b.defaultTaxCodeId).executeTakeFirst();
-      const expected = { TAXABLE: ['STANDARD'], ZERO_RATED: ['ZERO_RATED'], EXEMPT: ['EXEMPT'], OUT_OF_SCOPE: ['OUT_OF_SCOPE'] }[b.taxApplicability ?? 'TAXABLE'];
-      if (!tc || !expected.includes(tc.type)) throw new AppError('VAL_FIELD', 'Tax code does not match the item tax applicability', undefined, [{ field: 'defaultTaxCodeId', message: 'Mismatch with tax applicability' }]);
-    }
+    b.defaultTaxCodeId = await this.resolveItemTax(trx, b.taxApplicability, b.defaultTaxCodeId, 'defaultTaxCodeId');
+    if (b.purchaseTaxApplicability) b.purchaseDefaultTaxCodeId = await this.resolveItemTax(trx, b.purchaseTaxApplicability, b.purchaseDefaultTaxCodeId, 'purchaseDefaultTaxCodeId');
+    else b.purchaseDefaultTaxCodeId = null;
     return {
       sales: b.salesAccountId ?? (isService ? k('SALES_SERVICES') : k('SALES_GOODS') ?? k('SALES_SERVICES')),
       purchase: b.purchaseAccountId ?? (stock ? k('INVENTORY') ?? k('GENERAL_EXPENSE') : k('GENERAL_EXPENSE')),
@@ -222,6 +236,8 @@ export class ContactsController {
           uom_code: b.uomCode,
           tax_applicability: b.taxApplicability,
           default_tax_code_id: b.defaultTaxCodeId ?? null,
+          purchase_tax_applicability: b.purchaseTaxApplicability ?? null,
+          purchase_default_tax_code_id: b.purchaseDefaultTaxCodeId ?? null,
           sales_price: b.salesPrice,
           purchase_price: b.purchasePrice,
           sales_account_id: def.sales,
@@ -248,7 +264,7 @@ export class ContactsController {
       const before = await trx.selectFrom('items').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');
       if (before.version !== b.version) throw new AppError('DOC_VERSION_CONFLICT');
-      const merged = { type: b.type ?? (before.type as any), taxApplicability: b.taxApplicability ?? (before.tax_applicability as any), defaultTaxCodeId: b.defaultTaxCodeId === undefined ? before.default_tax_code_id : b.defaultTaxCodeId, salesAccountId: b.salesAccountId ?? before.sales_account_id, purchaseAccountId: b.purchaseAccountId ?? before.purchase_account_id };
+      const merged = { type: b.type ?? (before.type as any), taxApplicability: b.taxApplicability ?? (before.tax_applicability as any), defaultTaxCodeId: b.defaultTaxCodeId === undefined ? before.default_tax_code_id : b.defaultTaxCodeId, purchaseTaxApplicability: b.purchaseTaxApplicability === undefined ? (before.purchase_tax_applicability as any) : b.purchaseTaxApplicability, purchaseDefaultTaxCodeId: b.purchaseDefaultTaxCodeId === undefined ? before.purchase_default_tax_code_id : b.purchaseDefaultTaxCodeId, salesAccountId: b.salesAccountId ?? before.sales_account_id, purchaseAccountId: b.purchaseAccountId ?? before.purchase_account_id };
       await this.itemDefaults(trx, merged);
       const after = await trx
         .updateTable('items')
@@ -258,6 +274,8 @@ export class ContactsController {
           uom_code: b.uomCode ?? before.uom_code,
           tax_applicability: merged.taxApplicability,
           default_tax_code_id: merged.defaultTaxCodeId,
+          purchase_tax_applicability: merged.purchaseTaxApplicability ?? null,
+          purchase_default_tax_code_id: merged.purchaseDefaultTaxCodeId ?? null,
           sales_price: b.salesPrice ?? before.sales_price,
           purchase_price: b.purchasePrice ?? before.purchase_price,
           sales_account_id: merged.salesAccountId,
