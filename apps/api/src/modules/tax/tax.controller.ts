@@ -131,7 +131,7 @@ export class TaxService {
       inAcct = inAcct ?? sys.find((x) => x.system_key === 'INPUT_TAX')?.id ?? null;
     }
     const fields = {
-      name: pack.name, country: pack.country, model: pack.model, tax_label: pack.taxLabel, tax_id_label: pack.taxIdLabel, invoice_title: pack.invoiceTitle,
+      name: pack.name, country: pack.country === 'OTHER' ? ((await trx.selectFrom('companies').select('country').where('id', '=', companyId).executeTakeFirstOrThrow()).country) : pack.country, model: pack.model, tax_label: pack.taxLabel, tax_id_label: pack.taxIdLabel, invoice_title: pack.invoiceTitle,
       prices_include_tax_default: pack.pricesIncludeTax, return_period: pack.returnPeriod, non_taxable_code: pack.nonTaxableCode,
       default_standard_code: pack.defaultStandardCode || null, source_pack: pack.key, pack_version: pack.version, pack_as_of: pack.asOf,
     };

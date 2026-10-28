@@ -109,14 +109,14 @@ export async function createUser(opts: { email?: string; name?: string; superAdm
 }
 
 /** Super admin, logged in with 2FA, who creates a company and is its Company Admin. */
-export async function setupCompany(country: 'NP' | 'AU' = 'NP', businessType = 'MIXED', name = uniq('Co')) {
+export async function setupCompany(country = 'NP', businessType = 'MIXED', name = uniq('Co'), extra: Record<string, unknown> = {}) {
   const a = await getApp();
   const u = await createUser({ superAdmin: true, name: 'Owner Admin' });
   const admin = await new TestClient(a, u.email).init();
   admin.userId = u.id;
   await admin.login();
   await admin.enable2fa();
-  const r = await admin.post('/companies', { name, country, businessType, firstFiscalYearDate: country === 'NP' ? '2026-10-01' : '2026-10-01' }, false);
+  const r = await admin.post('/companies', { name, country, businessType, firstFiscalYearDate: '2026-10-01', ...extra }, false);
   if (r.status !== 201) throw new Error('company create failed: ' + JSON.stringify(r.body));
   admin.companyId = r.body.id;
   return { admin, companyId: r.body.id as string, company: r.body };
