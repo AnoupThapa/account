@@ -6,7 +6,7 @@
  */
 /** Phase 2B acceptance (docs/14 §5): global tax systems, group taxes, taxable/non-taxable choices. */
 import { describe, it, expect, afterAll } from 'vitest';
-import { addMember, closeApp, setupCompany, TestClient } from './helpers';
+import { addMember, closeApp, createUser, getApp, setupCompany, TestClient } from './helpers';
 
 afterAll(closeApp);
 
@@ -120,6 +120,16 @@ describe('tax systems: packs, regimes and countries', () => {
     const inv = (await c.maker.post('/sales-invoices', { date: '2026-10-05', contactId: cust.id, lines: [{ accountId: c.acct('SALES_SERVICES'), quantity: '1', unitPrice: '1000', taxCodeId: c.tax('COMBINED') }] })).body;
     expect(inv.tax_total).toBe('71.00'); // 5% of 1000 = 50, then 2% of (1000 + 50) = 21
     expect(inv.grand_total).toBe('1071.00');
+    // it posts (one line per component) and the printed invoice uses the custom labels
+    await c.maker.patch(`/contacts/${cust.id}`, { taxId: '811111111', version: cust.version });
+    await post(c, 'SALES_INVOICE', inv.id);
+    const { lines } = await journal(c, 'sales-invoices', inv.id);
+    expect(lines.filter((l) => l.name.toLowerCase().includes('output')).map((l) => l.credit).sort()).toEqual(['21.00', '50.00']);
+    expect(total(lines, 'debit')).toBe('1071.00');
+    const html = (await c.maker.get(`/print/sales_invoice/${inv.id}?format=html`)).text;
+    expect(html).toContain('Faturë');
+    expect(html).toContain('TVSH');
+    expect(html).toContain('NUI 811111111');
   });
 });
 
@@ -189,6 +199,37 @@ describe('taxable / non-taxable choices on items and bills', () => {
     expect(inv).toMatchObject({ tax_total: '13.00', taxable_total: '100.00' });
     const bill = (await c.maker.post('/bills', { date: '2026-10-05', contactId: sup.id, supplierInvoiceNo: 'S-1', lines: [{ itemId: item.id, quantity: '1', unitPrice: '80' }] })).body;
     expect(bill).toMatchObject({ tax_total: '0.00', exempt_total: '80.00', grand_total: '80.00' });
+  });
+
+  it('an item bought with non-claimable tax: the tax goes to cost, not to input tax', async () => {
+    const c = await companyCtx('NP');
+    const item = (await c.maker.post('/items', { sku: 'NC-1', name: 'Entertainment goods', type: 'NON_INVENTORY', taxApplicability: 'TAXABLE', purchaseTaxApplicability: 'TAXABLE', purchaseDefaultTaxCodeId: c.tax('VAT13-NC'), purchasePrice: '1000' })).body;
+    const sup = (await c.maker.post('/contacts', { type: 'SUPPLIER', name: 'Caterer', pan: '300555666' })).body;
+    const bill = (await c.maker.post('/bills', { date: '2026-10-05', contactId: sup.id, supplierInvoiceNo: 'NC-1', lines: [{ itemId: item.id, quantity: '1', unitPrice: '1000' }] })).body;
+    expect(bill).toMatchObject({ tax_total: '130.00', non_claimable_tax: '130.00', grand_total: '1130.00' });
+    await post(c, 'PURCHASE_BILL', bill.id);
+    const { lines } = await journal(c, 'bills', bill.id);
+    expect(lines.some((l) => l.name.toLowerCase().includes('input') || l.name.toLowerCase().includes('vat'))).toBe(false);
+    expect(lines.filter((l) => Number(l.debit) > 0).map((l) => l.debit)).toEqual(['1130.00']);
+  });
+
+  it('a user without item.tax_override cannot change an item’s tax on a line (403)', async () => {
+    const c = await companyCtx('NP');
+    await c.admin.stepUp();
+    const role = await c.admin.post('/roles', { name: 'Junior maker', requires2fa: false, permissions: ['item.view', 'contact.view', 'coa.view', 'tax.view', 'sales_invoice.view', 'sales_invoice.create'] });
+    expect(role.status).toBe(201);
+    const a = await getApp();
+    const u = await createUser({ name: 'Junior' });
+    expect((await c.admin.post('/users', { email: u.email, fullName: 'Junior', roleIds: [role.body.id] })).status).toBe(201);
+    const jr = await new TestClient(a, u.email).init();
+    await jr.login();
+    jr.companyId = c.admin.companyId;
+    const item = (await c.maker.post('/items', { sku: 'J-1', name: 'Widget', type: 'NON_INVENTORY', taxApplicability: 'TAXABLE', salesPrice: '100' })).body;
+    const cust = (await c.maker.post('/contacts', { type: 'CUSTOMER', name: 'Cust' })).body;
+    const plain = await jr.post('/sales-invoices', { date: '2026-10-05', contactId: cust.id, lines: [{ itemId: item.id, quantity: '1', unitPrice: '100' }] });
+    expect(plain.status, JSON.stringify(plain.body)).toBe(201); // using the item's own tax is always allowed
+    const over = await jr.post('/sales-invoices', { date: '2026-10-05', contactId: cust.id, lines: [{ itemId: item.id, quantity: '1', unitPrice: '100', taxCodeId: c.tax('VAT0'), taxOverrideReason: 'export' }] });
+    expect(over.status).toBe(403);
   });
 
   it('purchase side mismatch with its tax code is refused', async () => {

@@ -40,7 +40,7 @@ Withholding taxes (TDS and equivalents) generalise into **withholding codes** (r
 1. **Library ("tax packs").** Shipped as versioned data files (not code), each: regime + starter tax codes + rates + account mappings + report layout. Order of delivery: NP, AU (exist) → UK, NZ, India, Singapore, UAE, Canada, South Africa, EU standard rates, US (state-level shell) → more on request. Each pack shows "starter data as of <date> — **Admin must confirm rates before first use**". Packs are never silently updated; a newer pack version is offered as a diff the admin approves.
 2. **Custom builder (Settings → Tax system → "My country isn't listed").** Wizard: pick model → name/labels → add components (name, rate, effective date, payable account, claimable?, stacked?) → create tax codes from components → choose tax-ID label and invoice title → preview on a sample invoice. Saved as a regime, can be exported/imported as a pack file and reused across the owner's companies.
 
-Admin screen **Settings → Tax system:** choose regime for the company (one primary; optional extra regimes for a company that registers in two places), see active codes, change rates by adding a new effective-dated rate (never edit history). Changing regime, tax codes or rates needs step-up + audit and is routed through maker–checker (closing the Phase 0–2 gap).
+Admin screen **Settings → Tax system:** choose regime for the company (one primary; optional extra regimes for a company that registers in two places), see active codes, change rates by adding a new effective-dated rate (never edit history). Changing regime, tax codes or rates needs step-up + audit. **Routing these changes through maker–checker is NOT built in Phase 2B** (still the open Phase 0–2 gap; planned with the Phase 4 settings work).
 
 ### 3.3 Taxable / non-taxable choices (item, bill, upload)
 **At item creation (admin or `item.manage`):**
@@ -82,7 +82,7 @@ All new tables: `company_id` + RLS + audit; NUMERIC rates; no floating point.
 Tax summary by regime and component (output, input, net payable); Tax register with columns driven by the regime; taxable / zero-rated / exempt / out-of-scope totals; non-claimable report; override report (who changed taxability and why). Nepal Sales/Purchase Books keep the IRD layout (a regime-specific report layout in the Nepal pack); other regimes get the generic register. Per-regime return-working export (CSV/Excel) is a later add-on, never a filing.
 
 ### 3.7 Permissions
-`tax.regime.manage` (Admin, step-up), `tax.code.manage`, `tax.rate.manage`, `tax.override_line`, `report.tax_summary.view`, `report.tax_override.view`.
+Built: `tax.manage` (Admin, step-up) covers regimes, packs, codes, groups and rates; `item.tax_override` (existing permission) lets a user change a line's tax away from the item's default — now granted to the Accountant role by default, with a reason required (company setting, on by default). Not built yet: `report.tax_override.view` (override report).
 
 ## 4. Honest limits
 - **"All tax systems in the world" cannot be verified or kept current by this project alone** (≈200 jurisdictions; rates, thresholds and rules change; US sales tax varies by address). The plan is: accurate packs for the most-used regimes, a flexible builder for the rest, and clear "confirm with your accountant" prompts. Pack data is starter data, not tax advice.
@@ -96,14 +96,14 @@ Do this **before more modules depend on tax**, as a short inserted phase:
 - Later: more packs, rate-service integration, return-working exports.
 
 **Acceptance checks (Phase 2B):**
-- [ ] All Phase 2 tests still pass unchanged (VAT 13% mixed invoice → 1,020.09 / 500.00 / 132.61 / 1,652.70; inclusive = exclusive).
-- [ ] Admin creates a company in a country with no pack via the builder; invoice posts with correct tax and labels.
-- [ ] India-style CGST+SGST line and Canada-style GST+PST line: tax per component, ledger balanced, per-component accounts correct, inclusive pricing correct.
-- [ ] Item taxable on sale but non-claimable on purchase: bill posts tax to cost, not to input tax.
-- [ ] Non-taxable choice on a bill line posts zero tax and is reported as exempt/out-of-scope as configured.
-- [ ] Line override without permission → 403; with permission → reason required (if configured) and logged; shown to approver.
-- [ ] Rate change by adding a new effective date leaves old invoices unchanged; changing regime/rates goes through maker–checker.
-- [ ] Cross-company isolation (RLS) on every new table; invoice PDF uses the regime's labels and tax-ID label.
+- [x] All Phase 2 tests still pass unchanged (VAT 13% mixed invoice → 1,020.09 / 500.00 / 132.61 / 1,652.70; inclusive = exclusive).
+- [x] Admin creates a company in a country with no pack via the builder; invoice posts with correct tax and labels.
+- [x] India-style CGST+SGST line and Canada-style GST+PST line: tax per component, ledger balanced, per-component accounts correct, inclusive pricing correct.
+- [x] Item taxable on sale but non-claimable on purchase: bill posts tax to cost, not to input tax.
+- [x] Non-taxable choice on a bill line posts zero tax and is reported as exempt/out-of-scope as configured.
+- [x] Line override without permission → 403; with permission → reason required (if configured) and logged; shown to approver.
+- [x] Rate change by adding a new effective date leaves old invoices unchanged. (Regime/rate changes go through step-up + audit; maker–checker routing deferred, see §3.2.)
+- [x] Cross-company isolation (RLS) on every new table; invoice PDF uses the regime's labels and tax-ID label.
 
 ## 6. Open questions for the owner
 1. Which countries do you need first after Nepal and Australia (your own companies / first customers)?

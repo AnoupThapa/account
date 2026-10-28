@@ -59,7 +59,7 @@ If something fails, the window says **PROBLEM:** and what to do; if it isn't cle
 ```
 bash scripts/dev-setup.sh      # installs PostgreSQL 16 + Redis if missing, creates roles & databases, installs packages, migrates
 pnpm build                      # builds shared, db, api, worker, web
-pnpm test                       # 368 automated tests (needs the ledgerpro_test database created by dev-setup)
+pnpm test                       # 394 automated tests (needs the ledgerpro_test database created by dev-setup)
 pnpm --filter @ledgerpro/api seed:demo
 pnpm dev                        # API :4000, web :3000, worker
 ```
