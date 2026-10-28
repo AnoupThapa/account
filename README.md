@@ -53,6 +53,8 @@ docs/         specification + phase reports
 | [09 Reports & Dashboard](docs/09-reports-dashboard.md) | Every report's definition, dashboard, summary sheet |
 | [10 Integrations & API](docs/10-integrations-api.md) | IRD/CBMS readiness, bank feeds, API conventions |
 | [11 Open Questions](docs/11-roadmap-open-questions.md) | Decisions needed before build |
+| [12 Competitive Review](docs/12-competitive-gap-analysis.md) | PROPOSED: gaps vs Zoho/Xero/QuickBooks and improvement plan |
+| [13 Attendance & HR](docs/13-attendance-hr.md) | PROPOSED: attendance, leave, overtime, payroll-ready module |
 | [ip-protection.md](docs/ip-protection.md) | Copyright, trademark, confidentiality, contracts, customer licensing |
 
 ## Recommended stack (summary)

@@ -88,3 +88,7 @@ Each phase ends with a working, deployable version on staging. A phase is **done
 
 ## Phase 10 — Integrations (ongoing)
 Public API & webhooks, NRB exchange rates, payment gateways (eSewa/Khalti/Fonepay/Stripe), Shopify, bank feeds, IRD CBMS adapter (after certification decision), Nepali UI.
+
+## PROPOSED additions (not approved — see docs/12 and docs/13)
+- **Phase 4A — Go-to-market basics:** recurring documents, auto-reminders, import wizard (Tally/Excel/CSV), invoice branding, notification centre, CI/Docker proven.
+- **Phase 5A — Attendance, Leave & Payroll-ready (A1 → A3):** see docs/13. Do not start until the owner approves.
