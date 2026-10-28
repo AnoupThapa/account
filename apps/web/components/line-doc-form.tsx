@@ -22,15 +22,18 @@ interface Line {
   unitPrice: string;
   discountPercent: string;
   taxCodeId: string | null;
+  taxOverrideReason: string;
   costCentreId: string | null;
 }
-const blank = (): Line => ({ itemId: null, accountId: null, description: '', quantity: '1', unitPrice: '', discountPercent: '0', taxCodeId: null, costCentreId: null });
+const blank = (): Line => ({ itemId: null, accountId: null, description: '', quantity: '1', unitPrice: '', discountPercent: '0', taxCodeId: null, taxOverrideReason: '', costCentreId: null });
 
 export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) {
   const router = useRouter();
   const qc = useQueryClient();
   const items = useItems();
   const taxes = useTaxCodes();
+  const regimeQ = useQuery({ queryKey: ['tax-regime'], queryFn: () => get<any>('/tax/regime'), staleTime: 60_000 });
+  const taxLabel = regimeQ.data?.regime?.tax_label ?? 'VAT / GST';
   const e = existing;
   const [h, setH] = useState<any>(() => ({
     date: e ? e.invoice_date ?? e.note_date ?? e.quote_date ?? e.order_date ?? e.bill_date ?? e.expense_date : today(),
@@ -55,7 +58,7 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
   }));
   const [lines, setLines] = useState<Line[]>(() =>
     e?.lines?.length
-      ? e.lines.map((l: any) => ({ itemId: l.item_id, accountId: l.account_id, description: l.description ?? '', quantity: String(Number(l.quantity)), unitPrice: String(Number(l.unit_price)), discountPercent: String(Number(l.discount_percent)), taxCodeId: l.tax_code_id, costCentreId: l.cost_centre_id }))
+      ? e.lines.map((l: any) => ({ itemId: l.item_id, accountId: l.account_id, description: l.description ?? '', quantity: String(Number(l.quantity)), unitPrice: String(Number(l.unit_price)), discountPercent: String(Number(l.discount_percent)), taxCodeId: l.tax_code_id, taxOverrideReason: l.tax_override_reason ?? '', costCentreId: l.cost_centre_id }))
       : [blank()],
   );
   const [err, setErr] = useState<unknown>(null);
@@ -68,16 +71,20 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
     enabled: !!h.contactId && (def.key === 'credit-notes' || def.key === 'debit-notes'),
   });
 
+  const rateAt = (t: any) => (t?.rates as any[] | undefined)?.find((r) => r.effective_from <= h.date && (!r.effective_to || r.effective_to >= h.date))?.rate ?? '0';
   const rateOf = (taxId: string | null) => {
     const t = taxes.data?.find((x) => x.id === taxId);
-    if (!t) return { type: 'OUT_OF_SCOPE' as TaxType, rate: '0' };
-    const r = (t.rates as any[]).find((r) => r.effective_from <= h.date && (!r.effective_to || r.effective_to >= h.date));
-    return { type: t.type as TaxType, rate: r?.rate ?? '0' };
+    if (!t) return { type: 'OUT_OF_SCOPE' as TaxType, rate: '0', components: undefined };
+    // group (compound) code: each component is taxed with its own rate on the document date
+    if (t.is_group) return { type: 'STANDARD' as TaxType, rate: '0', components: (t.components as any[]).map((c) => ({ rate: rateAt(taxes.data?.find((x) => x.id === c.code_id)), stacked: c.stacked })) };
+    return { type: t.type as TaxType, rate: rateAt(t), components: undefined };
   };
+  /** the tax code an item proposes on this side (purchase side may differ from sales — docs/14 §3.3) */
+  const itemDefault = (it: any) => (def.side === 'PURCHASE' && it?.purchase_tax_applicability ? it.purchase_default_tax_code_id : it?.default_tax_code_id) ?? null;
   const preview = useMemo(() => {
     try {
       return calculateTax(
-        lines.map((l) => ({ quantity: l.quantity || '0', unitPrice: l.unitPrice || '0', discountPercent: l.discountPercent || '0', taxType: rateOf(l.taxCodeId).type, taxRate: rateOf(l.taxCodeId).rate })),
+        lines.map((l) => ({ quantity: l.quantity || '0', unitPrice: l.unitPrice || '0', discountPercent: l.discountPercent || '0', taxType: rateOf(l.taxCodeId).type, taxRate: rateOf(l.taxCodeId).rate, components: rateOf(l.taxCodeId).components })),
         { pricesIncludeTax: h.pricesIncludeTax },
       );
     } catch {
@@ -89,7 +96,7 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
   const setLine = (i: number, patchL: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patchL } : l)));
   const pickItem = (i: number, id: string | null) => {
     const it = items.data?.find((x) => x.id === id);
-    setLine(i, { itemId: id, description: it?.name ?? '', unitPrice: it ? String(Number(def.side === 'SALES' ? it.sales_price : it.purchase_price) || '') : '', taxCodeId: it?.default_tax_code_id ?? null, accountId: null });
+    setLine(i, { itemId: id, description: it?.name ?? '', unitPrice: it ? String(Number(def.side === 'SALES' ? it.sales_price : it.purchase_price) || '') : '', taxCodeId: itemDefault(it), taxOverrideReason: '', accountId: null });
   };
 
   const save = async (andSubmit: boolean) => {
@@ -182,14 +189,14 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
           </>
         )}
         <Field label="Prices">
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={h.pricesIncludeTax} onChange={(x) => set('pricesIncludeTax', x.target.checked)} /> Prices include VAT/GST</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={h.pricesIncludeTax} onChange={(x) => set('pricesIncludeTax', x.target.checked)} /> Prices include {taxLabel}</label>
         </Field>
       </div>
 
       <div className="panel overflow-x-auto">
         <table className="grid min-w-[900px]">
           <thead>
-            <tr><th style={{ width: 230 }}>Item</th><th>Description / account</th><th style={{ width: 90 }}>Qty</th><th style={{ width: 110 }}>Rate</th><th style={{ width: 80 }}>Disc %</th><th style={{ width: 130 }}>Tax</th><th className="num" style={{ width: 110 }}>Amount</th><th /></tr>
+            <tr><th style={{ width: 230 }}>Item</th><th>Description / account</th><th style={{ width: 90 }}>Qty</th><th style={{ width: 110 }}>Rate</th><th style={{ width: 80 }}>Disc %</th><th style={{ width: 170 }}>Tax</th><th className="num" style={{ width: 110 }}>Amount</th><th /></tr>
           </thead>
           <tbody>
             {lines.map((l, i) => (
@@ -203,7 +210,15 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
                 <td><input className="input num" value={l.quantity} onChange={(x) => setLine(i, { quantity: x.target.value })} inputMode="decimal" /></td>
                 <td><input className="input num" value={l.unitPrice} onChange={(x) => setLine(i, { unitPrice: x.target.value })} inputMode="decimal" /></td>
                 <td><input className="input num" value={l.discountPercent} onChange={(x) => setLine(i, { discountPercent: x.target.value })} inputMode="decimal" /></td>
-                <td><TaxSelect value={l.taxCodeId} onChange={(v) => setLine(i, { taxCodeId: v })} /></td>
+                <td className="space-y-1">
+                  <TaxSelect value={l.taxCodeId} onChange={(v) => setLine(i, { taxCodeId: v })} />
+                  {regimeQ.data?.nonTaxableCodeId && l.taxCodeId !== regimeQ.data.nonTaxableCodeId && (
+                    <button type="button" className="btn btn-sm" title="Use the non-taxable code of your tax system" onClick={() => setLine(i, { taxCodeId: regimeQ.data.nonTaxableCodeId })}>Non-taxable</button>
+                  )}
+                  {l.itemId && l.taxCodeId !== itemDefault(items.data?.find((x) => x.id === l.itemId)) && (
+                    <input className="input" placeholder={regimeQ.data?.policy?.overrideReasonRequired ? 'Reason for changing tax *' : 'Reason (optional)'} value={l.taxOverrideReason} onChange={(x) => setLine(i, { taxOverrideReason: x.target.value })} />
+                  )}
+                </td>
                 <td className="num"><Money v={preview?.lines[i]?.net} /></td>
                 <td><button className="btn btn-sm" onClick={() => setLines((ls) => (ls.length > 1 ? ls.filter((_, j) => j !== i) : ls))} aria-label="Remove line">✕</button></td>
               </tr>
@@ -219,7 +234,7 @@ export function LineDocForm({ def, existing }: { def: DocDef; existing?: any }) 
                 {Number(preview.exemptTotal) > 0 && <tr><td className="pr-6 muted">Exempt / non-taxable</td><td className="num"><Money v={preview.exemptTotal} /></td></tr>}
                 {Number(preview.zeroRatedTotal) > 0 && <tr><td className="pr-6 muted">Zero-rated</td><td className="num"><Money v={preview.zeroRatedTotal} /></td></tr>}
                 <tr><td className="pr-6 muted">Taxable</td><td className="num"><Money v={preview.taxableTotal} /></td></tr>
-                <tr><td className="pr-6 muted">VAT / GST</td><td className="num"><Money v={preview.taxTotal} /></td></tr>
+                <tr><td className="pr-6 muted">{taxLabel}</td><td className="num"><Money v={preview.taxTotal} /></td></tr>
                 <tr><td className="pr-6 font-bold">Total</td><td className="num font-bold"><Money v={preview.grandTotal} /></td></tr>
               </tbody>
             </table>

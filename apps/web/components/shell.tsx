@@ -71,7 +71,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { href: '/settings/company', label: 'Company', perm: 'company.manage' },
       { href: '/settings/users', label: 'Users & roles', perm: 'user.view' },
       { href: '/settings/fiscal', label: 'Fiscal years & periods', perm: 'fiscal_year.manage' },
-      { href: '/settings/tax', label: 'Tax & TDS codes', perm: 'tax.view' },
+      { href: '/settings/tax', label: 'Tax system & codes', perm: 'tax.view' },
       { href: '/settings/workflows', label: 'Approval workflows', perm: 'workflow.manage' },
       { href: '/settings/audit', label: 'Audit log', perm: 'audit.view' },
     ],

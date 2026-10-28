@@ -25,7 +25,7 @@ export default function Company() {
   const save = async () => {
     setErr(null); setOk(null);
     try {
-      await patch('/companies/current', { name: f.name, legalName: f.legal_name, pan: f.pan, vatNo: f.vat_no, abn: f.abn, address: f.address, phone: f.phone, email: f.email ?? '', taxRounding: f.tax_rounding, version: f.version });
+      await patch('/companies/current', { name: f.name, legalName: f.legal_name, pan: f.pan, vatNo: f.vat_no, abn: f.abn, taxId: f.tax_id, address: f.address, phone: f.phone, email: f.email ?? '', taxRounding: f.tax_rounding, version: f.version });
       setOk('Saved.');
       qc.invalidateQueries();
     } catch (e) { setErr(e); }
@@ -46,7 +46,7 @@ export default function Company() {
       <div className="panel p-4 grid sm:grid-cols-2 gap-3">
         <Field label="Trading name"><input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
         <Field label="Legal name"><input className="input" value={f.legal_name ?? ''} onChange={(e) => setF({ ...f, legal_name: e.target.value })} /></Field>
-        {f.country === 'AU' ? <Field label="ABN"><input className="input" value={f.abn ?? ''} onChange={(e) => setF({ ...f, abn: e.target.value })} /></Field> : <Field label="PAN / VAT No."><input className="input" value={f.pan ?? ''} onChange={(e) => setF({ ...f, pan: e.target.value })} /></Field>}
+        {f.country === 'AU' ? <Field label="ABN"><input className="input" value={f.abn ?? ''} onChange={(e) => setF({ ...f, abn: e.target.value })} /></Field> : f.country === 'NP' ? <Field label="PAN / VAT No."><input className="input" value={f.pan ?? ''} onChange={(e) => setF({ ...f, pan: e.target.value })} /></Field> : <Field label="Tax registration no. (see Settings → Tax system)"><input className="input" value={f.tax_id ?? ''} onChange={(e) => setF({ ...f, tax_id: e.target.value })} /></Field>}
         <Field label="Phone"><input className="input" value={f.phone ?? ''} onChange={(e) => setF({ ...f, phone: e.target.value })} /></Field>
         <Field label="Email"><input className="input" value={f.email ?? ''} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
         <Field label="Address"><input className="input" value={f.address ?? ''} onChange={(e) => setF({ ...f, address: e.target.value })} /></Field>
