@@ -92,3 +92,8 @@ Contact list and runbook stored outside the app (e.g. in Drive).
 - [ ] Upload virus scanning active
 - [ ] Penetration test findings fixed (critical/high)
 - [ ] Repo private, branch protection on, LICENSE present
+
+## Dependency security policy
+- CI runs `pnpm audit --prod --audit-level high` on every push and fails on any high/critical advisory.
+- Patched versions of transitive dependencies are forced in `pnpm-workspace.yaml` (`overrides`); remove an override once the parent package ships the fix.
+- Major-version upgrades (e.g. Zod 3→4) need the full test suite plus a check for changed behaviour — see `patchSchema()` for the Zod 4 `.partial()` default-value change.

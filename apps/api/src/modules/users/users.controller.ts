@@ -7,7 +7,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { sql } from 'kysely';
-import { AppError, ALL_PERMISSIONS, PERMISSIONS, zMoneyNonNeg, zPassword } from '@ledgerpro/shared';
+import { AppError, ALL_PERMISSIONS, PERMISSIONS, patchSchema, zMoneyNonNeg, zPassword } from '@ledgerpro/shared';
 import { Ctx, Perm, StepUp, Zod } from '../../common/decorators';
 import type { CompanyContext } from '../../common/context';
 import { DatabaseService, Tx } from '../../common/database.service';
@@ -193,7 +193,7 @@ export class UsersController {
   @Perm('role.manage')
   @StepUp()
   @Patch('roles/:id')
-  updateRole(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(roleSchema.partial())) b: Partial<z.infer<typeof roleSchema>>) {
+  updateRole(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(roleSchema))) b: Partial<z.infer<typeof roleSchema>>) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('roles').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

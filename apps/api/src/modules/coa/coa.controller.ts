@@ -6,7 +6,7 @@
  */
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
-import { AppError } from '@ledgerpro/shared';
+import { AppError, patchSchema } from '@ledgerpro/shared';
 import { Ctx, Perm, Zod } from '../../common/decorators';
 import type { CompanyContext } from '../../common/context';
 import { DatabaseService, Tx } from '../../common/database.service';
@@ -159,7 +159,7 @@ export class CoaController {
 
   @Perm('cost_centre.manage')
   @Patch('cost-centres/:id')
-  updateCc(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(ccSchema.partial())) b: Partial<z.infer<typeof ccSchema>>) {
+  updateCc(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(ccSchema))) b: Partial<z.infer<typeof ccSchema>>) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('cost_centres').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

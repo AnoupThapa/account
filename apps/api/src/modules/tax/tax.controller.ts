@@ -6,7 +6,7 @@
  */
 import { Body, Controller, Get, Injectable, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
-import { AppError, addDays, d, zAdDate, zRate, TAX_PACKS, TAX_PACK_BY_KEY, validatePack, TaxPack } from '@ledgerpro/shared';
+import { AppError, addDays, d, patchSchema, zAdDate, zRate, TAX_PACKS, TAX_PACK_BY_KEY, validatePack, TaxPack } from '@ledgerpro/shared';
 import { Ctx, Perm, StepUp, Zod } from '../../common/decorators';
 import type { CompanyContext } from '../../common/context';
 import { DatabaseService, Tx } from '../../common/database.service';
@@ -418,7 +418,7 @@ export class TaxController {
 
   @Perm('tds.manage')
   @Patch('tds-codes/:id')
-  updateTds(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(tdsSchema.partial().extend({ isActive: z.boolean().optional() }))) b: Partial<z.infer<typeof tdsSchema>> & { isActive?: boolean }) {
+  updateTds(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(tdsSchema).extend({ isActive: z.boolean().optional() }))) b: Partial<z.infer<typeof tdsSchema>> & { isActive?: boolean }) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('tds_codes').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

@@ -51,3 +51,12 @@ Branch: `claude/wizardly-hopper-fmsd6z` (draft PR). Scope: docs/14, approved by 
 - **Multi-currency is still not supported**; tax is in the company's base currency.
 - Foreign-country **Chart of accounts** uses the generic IFRS layout; Nepal-specific accounts exist only for Nepal companies.
 - CI: the workflow's Ubuntu image was pinned to 24.04 because Playwright 1.56 does not run on Ubuntu 26.04 (`ubuntu-latest`).
+
+## 6. Security update added to this branch (28 Oct 2026)
+The CI dependency audit started failing on advisories published against libraries the app already used (it was **not** caused by Phase 2B). Fixed on the same branch (the only branch I may push to):
+- **Next.js 15.5.27 → 15.5.28** (critical remote-code-execution flaw and a denial-of-service flaw).
+- **Kysely 0.27 → 0.28.18** (SQL-injection advisories), **Nodemailer 6 → 10.2** (worker emails), **Zod 3 → 4.6.7** (input validation), NestJS 11.2.8, and forced patched versions of `postcss`, `multer`, `body-parser` and `qs` (`pnpm-workspace.yaml` overrides).
+- `pnpm audit --prod --audit-level high`: **No known vulnerabilities found.**
+- **A real bug the upgrade would have caused, caught by the tests:** Zod 4's "partial" schema still fills in default values, so editing one field of a role, item or contact would have silently reset other fields (a role's permissions, an item's prices and unit, a contact's payment terms). All edit forms now use `patchSchema()` (`packages/shared/src/schemas.ts`), and 3 new tests (`patch-safety.test.ts`) guard it.
+- Tests after the update: shared 303, database 23, API 71, browser smoke test OK, production build OK.
+- Not changed: NestJS stays on 11.x (12 is a separate major upgrade); Kysely stays on 0.28 (0.29 is newer).

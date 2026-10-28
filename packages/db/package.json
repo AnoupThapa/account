@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@ledgerpro/shared": "workspace:*",
-    "kysely": "^0.27.4",
+    "kysely": "^0.28.18",
     "pg": "^8.13.1"
   },
   "devDependencies": {

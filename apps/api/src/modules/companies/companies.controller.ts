@@ -6,7 +6,7 @@
  */
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
-import { AppError, companyCreateSchema } from '@ledgerpro/shared';
+import { AppError, companyCreateSchema, patchSchema } from '@ledgerpro/shared';
 import { Ctx, NoCompany, Perm, StepUp, SuperAdminOnly, Zod } from '../../common/decorators';
 import type { CompanyContext, RequestContext } from '../../common/context';
 import { DatabaseService } from '../../common/database.service';
@@ -129,7 +129,7 @@ export class CompaniesController {
 
   @Perm('branch.manage')
   @Patch('current/branches/:id')
-  updateBranch(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(branchSchema.partial())) b: Partial<z.infer<typeof branchSchema>>) {
+  updateBranch(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(branchSchema))) b: Partial<z.infer<typeof branchSchema>>) {
     return this.dbs.tenant(ctx.companyId, ctx.userId, async (trx) => {
       const before = await trx.selectFrom('branches').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

@@ -7,7 +7,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { sql } from 'kysely';
-import { AppError, zMoneyNonNeg, zQty } from '@ledgerpro/shared';
+import { AppError, patchSchema, zMoneyNonNeg, zQty } from '@ledgerpro/shared';
 import { Ctx, Perm, Zod } from '../../common/decorators';
 import type { CompanyContext } from '../../common/context';
 import { DatabaseService, Tx } from '../../common/database.service';
@@ -130,7 +130,7 @@ export class ContactsController {
 
   @Perm('contact.manage')
   @Patch('contacts/:id')
-  update(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(contactSchema.partial().extend({ isActive: z.boolean().optional(), version: z.number().int() }))) b: Partial<z.infer<typeof contactSchema>> & { isActive?: boolean; version: number }) {
+  update(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(contactSchema).extend({ isActive: z.boolean().optional(), version: z.number().int() }))) b: Partial<z.infer<typeof contactSchema>> & { isActive?: boolean; version: number }) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('contacts').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');
@@ -259,7 +259,7 @@ export class ContactsController {
 
   @Perm('item.manage')
   @Patch('items/:id')
-  updateItem(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(itemSchema.partial().extend({ isActive: z.boolean().optional(), version: z.number().int() }))) b: Partial<z.infer<typeof itemSchema>> & { isActive?: boolean; version: number }) {
+  updateItem(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(itemSchema).extend({ isActive: z.boolean().optional(), version: z.number().int() }))) b: Partial<z.infer<typeof itemSchema>> & { isActive?: boolean; version: number }) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('items').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

@@ -81,3 +81,18 @@ export const docLineSchema = z.object({
 
 export type ManualJournalInput = z.infer<typeof manualJournalSchema>;
 export type DocLineInput = z.infer<typeof docLineSchema>;
+
+/**
+ * Schema for PATCH bodies: every field optional and NO defaults.
+ * Zod 4's `.partial()` still fills in `.default()` values for fields that were not sent, which would silently
+ * overwrite stored data (prices, permissions …) on an edit — so defaults are stripped first.
+ */
+export function patchSchema<S extends z.ZodObject<z.ZodRawShape>>(schema: S): z.ZodObject<Record<string, z.ZodType>> {
+  const shape: Record<string, z.ZodType> = {};
+  for (const [k, field] of Object.entries(schema.shape)) {
+    let t = field as z.ZodType;
+    while ('removeDefault' in t && typeof (t as { removeDefault?: unknown }).removeDefault === 'function') t = (t as unknown as { removeDefault: () => z.ZodType }).removeDefault();
+    shape[k] = t.optional();
+  }
+  return z.object(shape);
+}
