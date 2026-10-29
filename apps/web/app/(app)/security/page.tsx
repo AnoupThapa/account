@@ -27,6 +27,7 @@ export default function Security() {
       <PageHeader title="Security" subtitle="Two-factor authentication, password and sessions" />
       <ErrorBanner error={err} />
       {me?.must_change_password && <Notice tone="warn">Your administrator set a temporary password. Please choose your own password to continue.</Notice>}
+      {!me?.must_change_password && me?.has_temporary_password && <Notice tone="info">Your administrator gave you a temporary password. You can keep using it, but we recommend choosing your own — change it below whenever you like.</Notice>}
 
       <section className="panel p-4 mb-4">
         <h2 className="font-bold mb-2">Two-factor authentication (2FA)</h2>
@@ -40,7 +41,7 @@ export default function Security() {
           </div>
         ) : !setup ? (
           <div>
-            <p className="text-sm mb-3">2FA is required for Admin, Checker and Finance Manager roles. Install Google Authenticator, Microsoft Authenticator or similar on your phone, then:</p>
+            <p className="text-sm mb-3">2FA is optional for now (it will become required for Admin, Checker, Finance Manager and HR Manager roles before real use) — but we recommend switching it on. Install Google Authenticator, Microsoft Authenticator or similar on your phone, then:</p>
             <button className="btn btn-primary" onClick={async () => { try { setSetup(await post('/auth/2fa/setup', {})); } catch (e) { setErr(e); } }}>Set up 2FA</button>
           </div>
         ) : (

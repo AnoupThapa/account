@@ -6,7 +6,8 @@ Security baseline: **OWASP ASVS Level 2** and **OWASP Top 10**. Financial data i
 
 ## 1. Authentication
 - Passwords hashed with **Argon2id**; minimum 10 characters; checked against known-breached password list.
-- **TOTP 2FA** (Google Authenticator etc.), mandatory for Admin, Checker, Finance Manager; optional for others (admin can force for all). Recovery codes issued once.
+- **TOTP 2FA** (Google Authenticator etc.). **Testing phase (owner decision, 29 Oct 2026): optional for everyone** (`ENFORCE_2FA=false`) — users can switch it on from the Security page and it is then asked at every sign-in. **Before real company data:** set `ENFORCE_2FA=true` so it becomes mandatory for Admin, Checker, Finance Manager and HR Manager (and for all users where the company control says so). Recovery codes issued once.
+- **Temporary passwords** (set by an admin or HR for a new user): the user is advised, not forced, to choose their own during the testing phase (`FORCE_PASSWORD_CHANGE=false`). Set `FORCE_PASSWORD_CHANGE=true` before real use.
 - Optional "Sign in with Google" (Workspace accounts).
 - Account lockout: 5 failed attempts → 15-minute lock + email alert.
 - Access token 15 minutes; refresh token rotated on use, revoked on logout/password change; stored in httpOnly, Secure, SameSite=Strict cookies.
@@ -83,6 +84,7 @@ Contact list and runbook stored outside the app (e.g. in Drive).
 
 ## 12. Go-live security checklist
 - [ ] HTTPS with A rating (SSL Labs) and security headers (securityheaders.com)
+- [ ] **`ENFORCE_2FA=true` and `FORCE_PASSWORD_CHANGE=true` switched back on** (relaxed during testing)
 - [ ] 2FA enforced for privileged roles
 - [ ] RLS enabled on all tenant tables (automated test)
 - [ ] Ledger immutability triggers active

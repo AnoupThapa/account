@@ -48,7 +48,7 @@ export default function Users() {
       </div>
       <div className="panel overflow-x-auto">
         <div className="p-3 flex justify-between"><b>Roles</b>{can('role.manage') && <button className="btn btn-sm" onClick={() => setRole({ name: '', description: '', requires2fa: false, approvalLimit: '', permissions: [] })}>+ New role</button>}</div>
-        <table className="grid text-sm"><thead><tr><th>Role</th><th>2FA</th><th>Approval limit</th><th>Permissions</th><th /></tr></thead>
+        <table className="grid text-sm"><thead><tr><th>Role</th><th>2FA (once enforced)</th><th>Approval limit</th><th>Permissions</th><th /></tr></thead>
           <tbody>{roles.data.map((r) => <tr key={r.id}><td>{r.name}<div className="muted text-xs">{r.description}</div></td><td>{r.requires_2fa ? 'required' : ''}</td><td>{r.approval_limit ?? 'no limit'}</td><td>{r.permissions.length}</td><td>{can('role.manage') && <button className="btn btn-sm" onClick={() => setRole({ id: r.id, name: r.name, description: r.description ?? '', requires2fa: r.requires_2fa, approvalLimit: r.approval_limit ?? '', permissions: r.permissions })}>Edit</button>}</td></tr>)}</tbody></table>
       </div>
       <Modal open={!!invite} onClose={() => setInvite(null)} title="Add user to this company">
@@ -71,7 +71,7 @@ export default function Users() {
           <div className="grid sm:grid-cols-3 gap-3">
             <Field label="Name"><input className="input" value={role.name} onChange={(e) => setRole({ ...role, name: e.target.value })} /></Field>
             <Field label="Approval limit (blank = none)"><input className="input num" value={role.approvalLimit} onChange={(e) => setRole({ ...role, approvalLimit: e.target.value })} /></Field>
-            <label className="flex gap-2 text-sm items-center mt-5"><input type="checkbox" checked={role.requires2fa} onChange={(e) => setRole({ ...role, requires2fa: e.target.checked })} /> Requires 2FA</label>
+            <label className="flex gap-2 text-sm items-center mt-5"><input type="checkbox" checked={role.requires2fa} onChange={(e) => setRole({ ...role, requires2fa: e.target.checked })} /> Requires 2FA (applies once the server enforces 2FA)</label>
           </div>
           <div className="grid sm:grid-cols-3 gap-1 max-h-96 overflow-auto text-xs">
             {(perms.data ?? []).map((p) => <label key={p.code} className="flex gap-2"><input type="checkbox" checked={role.permissions.includes(p.code)} onChange={(e) => setRole({ ...role, permissions: e.target.checked ? [...role.permissions, p.code] : role.permissions.filter((x: string) => x !== p.code) })} />{p.code}</label>)}

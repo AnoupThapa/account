@@ -26,6 +26,7 @@ export interface Me {
   is_super_admin: boolean;
   mfa_enabled: boolean;
   must_change_password: boolean;
+  has_temporary_password?: boolean;
   companies: { id: string; name: string; country: string; base_currency: string; calendar_mode: string; go_live_status: string }[];
 }
 export interface Access {

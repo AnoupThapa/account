@@ -18,7 +18,9 @@ export function loadTestEnv() {
   process.env.NODE_ENV = 'test';
   process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
   process.env.DATABASE_ADMIN_URL = process.env.TEST_DATABASE_ADMIN_URL;
+  // the enforcement mechanism is tested with both switched ON; optional-mode tests flip them (optional-security.test.ts)
   process.env.ENFORCE_2FA = 'true';
+  process.env.FORCE_PASSWORD_CHANGE = 'true';
   process.env.COOKIE_SECURE = 'false';
   if (!process.env.CHROMIUM_PATH && existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome')) {
     process.env.CHROMIUM_PATH = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';

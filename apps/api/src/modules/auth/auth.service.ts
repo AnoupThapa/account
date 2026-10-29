@@ -199,7 +199,7 @@ export class AuthService {
       sa: u.is_super_admin,
       mfa: mfaVerified,
       su: config().ENFORCE_2FA && u.is_super_admin && !u.mfa_enabled,
-      pw: u.must_change_password,
+      pw: config().FORCE_PASSWORD_CHANGE && u.must_change_password,
     };
   }
 
@@ -318,7 +318,8 @@ export class AuthService {
         .orderBy('companies.name')
         .execute(),
     );
-    return { ...u, recoveryCodesLeft: undefined, companies };
+    // `must_change_password` is only true when the server forces it (FORCE_PASSWORD_CHANGE); otherwise a temporary password is just advised
+    return { ...u, must_change_password: config().FORCE_PASSWORD_CHANGE && u.must_change_password, has_temporary_password: u.must_change_password, recoveryCodesLeft: undefined, companies };
   }
 
   // -------------------------------------------------------------------- 2FA

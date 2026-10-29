@@ -101,7 +101,7 @@ async function main() {
   console.log('  accountant.np@ / checker.np@ / finance.np@ / auditor.np@ / hr.np@ / staff.np@ledgerpro.local');
   console.log('  accountant.au@ / checker.au@ / finance.au@ / auditor.au@ / hr.au@ / staff.au@ledgerpro.local');
   console.log(`  Password for all demo users: ${PASSWORD}`);
-  console.log('  (Admin/Checker/Finance roles must set up 2FA on first sign-in unless ENFORCE_2FA=false on this laptop.)\n');
+  console.log('  (2FA is optional while ENFORCE_2FA=false — the testing-phase default. Turn it on for real use.)\n');
 }
 main().catch((e) => {
   console.error(e);

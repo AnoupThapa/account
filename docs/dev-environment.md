@@ -40,7 +40,7 @@ If something fails, the window says **PROBLEM:** and what to do; if it isn't cle
 
 1. Install **Docker Desktop** for Windows (docker.com → Download → Windows). Start it and wait until it says *Engine running*.
 2. Open the `ledgerpro` folder in File Explorer. Copy `.env.example` and rename the copy to `.env` (keep it in the same folder).
-   For your own PC you may open `.env` in Notepad and set `ENFORCE_2FA=false` so the demo users can sign in without an authenticator app. **Never do this on a server.**
+   **Testing phase:** 2FA and the forced password change are optional by default (`ENFORCE_2FA=false`, `FORCE_PASSWORD_CHANGE=false`), so demo users can sign in without an authenticator app. Users can still switch 2FA on and change their password on the Security page. **Before real company data, set both to `true`** (also on Render: Environment → add `ENFORCE_2FA=true` and `FORCE_PASSWORD_CHANGE=true`).
 3. Open **PowerShell** in the `ledgerpro\infra` folder (Shift + right-click inside the folder → *Open PowerShell window here*) and run:
    ```
    docker compose up -d --build
