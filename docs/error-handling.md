@@ -65,6 +65,10 @@
 | `TAX_MISMATCH` | OCR/entered VAT ≠ computed | VAT differs from calculation by X — confirm |
 | `BANK_IMPORT_FORMAT` | Unrecognised file/columns | Couldn't read the file — map columns |
 | `BANK_IMPORT_DUPLICATE` | Lines already imported | N lines skipped as duplicates |
+| `BANK_MATCH_UNBALANCED` | Statement and book totals differ | The statement and book amounts you selected are not equal |
+| `BANK_ALREADY_MATCHED` | Line already in a match | One of these items is already matched |
+| `BANK_NOT_BANK_ACCOUNT` | Non-bank account chosen | Choose a bank, cash or wallet account |
+| `BANK_RECON_DIFFERENCE` | Finish with a difference / open lines | The reconciliation does not balance yet |
 | `BANK_ALREADY_RECONCILED` | Edit reconciled item | Un-reconcile first (permission required) |
 | `FILE_TOO_LARGE` / `FILE_TYPE` / `FILE_INFECTED` | Upload checks | Clear reason; infected files quarantined |
 | `OCR_FAILED` / `OCR_LOW_CONFIDENCE` | OCR | Couldn't read invoice — enter manually / please check highlighted fields |

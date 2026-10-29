@@ -16,3 +16,4 @@ export * from './permissions';
 export * from './schemas';
 export * from './payroll';
 export * from './timezone';
+export * from './bank';

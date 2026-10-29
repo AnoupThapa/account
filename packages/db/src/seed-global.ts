@@ -44,8 +44,22 @@ export async function seedGlobal(adminUrl: string): Promise<void> {
     for (const [code, name] of UOMS) {
       await c.query('INSERT INTO uoms (code, name) VALUES ($1,$2) ON CONFLICT (code) DO NOTHING', [code, name]);
     }
+    const known = new Set((await c.query('SELECT code FROM permissions')).rows.map((r: { code: string }) => r.code));
+    const brandNew = ALL_PERMISSIONS.filter((p) => !known.has(p));
     for (const p of ALL_PERMISSIONS) {
       await c.query('INSERT INTO permissions (code, description) VALUES ($1,$2) ON CONFLICT (code) DO UPDATE SET description = EXCLUDED.description', [p, PERMISSIONS[p]]);
+    }
+    // A permission added after a company was created is granted ONCE to that company's matching default roles (never re-added if an admin later removes it)
+    for (const tpl of DEFAULT_ROLES) {
+      const grants = tpl.permissions.filter((p) => brandNew.includes(p));
+      for (const perm of grants) {
+        await c.query(
+          `INSERT INTO role_permissions (company_id, role_id, permission_code)
+           SELECT r.company_id, r.id, $2 FROM roles r WHERE r.key = $1
+           ON CONFLICT DO NOTHING`,
+          [tpl.key, perm],
+        );
+      }
     }
     // Roles added after a company was created (HR Manager, Staff) are added to existing companies — never changed once present
     for (const key of ['HR_MANAGER', 'STAFF']) {

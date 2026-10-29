@@ -28,6 +28,7 @@ import { AttendanceController, AttendanceService } from './modules/staff/attenda
 import { PayslipsController, PayslipService } from './modules/staff/payslips.controller';
 import { TdsCertificatesController, CertificateService } from './modules/staff/certificates.controller';
 import { SelfController } from './modules/staff/self.controller';
+import { BankController, BankService } from './modules/bank/bank.controller';
 import * as T from './modules/sales/trade.controllers';
 
 export const FEATURE_CONTROLLERS: any[] = [
@@ -58,6 +59,7 @@ export const FEATURE_CONTROLLERS: any[] = [
   PayslipsController,
   TdsCertificatesController,
   SelfController,
+  BankController,
 ];
 export const FEATURE_PROVIDERS: any[] = [
   LedgerService,
@@ -76,4 +78,5 @@ export const FEATURE_PROVIDERS: any[] = [
   AttendanceService,
   PayslipService,
   CertificateService,
+  BankService,
 ];

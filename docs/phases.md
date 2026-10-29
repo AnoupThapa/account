@@ -34,6 +34,7 @@ Each phase ends with a working, deployable version on staging. A phase is **done
 - [ ] AR control = sum of customer balances; AP control = sum of supplier balances
 
 ## Phase 3 — Banking & reconciliation (2–3 weeks)
+> **Core built early (2026-10-29, owner request) — see docs/16 and docs/phase-reports/bank-reconciliation.md:** CSV/Excel statement import, books side, manual / one-to-many / many-to-one matching, auto-match, create-from-statement (receipt, payment, expense, journal, suspense), finish & lock, printable BRS. **Still to do in Phase 3:** OFX/MT940 import and saved bank templates, bank transfers, cheque register.
 **Deliverables:** bank/cash/wallet accounts, transfers, cheque register, statement import (CSV/Excel/OFX/MT940 + saved column templates), auto/manual matching, create-from-statement, unidentified → suspense → reclassify, Bank Reconciliation Statement.
 **Acceptance checks**
 - [ ] Import of a real Nepali bank CSV and an Australian bank CSV

@@ -216,6 +216,52 @@ export interface AuthEvents {
   user_id: string | null;
 }
 
+export interface BankMatchGroups {
+  account_id: string;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  id: Generated<string>;
+  method: string;
+  reconciliation_id: string | null;
+}
+
+export interface BankStatementImports {
+  account_id: string;
+  closing_balance: Numeric | null;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  file_name: string | null;
+  id: Generated<string>;
+  opening_balance: Numeric | null;
+  period_from: string | null;
+  period_to: string | null;
+  rows_imported: Generated<number>;
+  rows_skipped: Generated<number>;
+  rows_total: Generated<number>;
+}
+
+export interface BankStatementLines {
+  account_id: string;
+  balance: Numeric | null;
+  cheque_no: string | null;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  description: Generated<string>;
+  id: Generated<string>;
+  ignore_reason: string | null;
+  import_id: string;
+  line_hash: string;
+  money_in: Generated<Numeric>;
+  money_out: Generated<Numeric>;
+  pending_doc_id: string | null;
+  pending_doc_type: string | null;
+  reference: string | null;
+  status: Generated<string>;
+  txn_date: string;
+}
+
 export interface Branches {
   address: string | null;
   code: string;
@@ -1090,6 +1136,31 @@ export interface Receipts {
   version: Generated<number>;
 }
 
+export interface ReconciliationMatches {
+  amount: Numeric;
+  company_id: string;
+  group_id: string;
+  id: Generated<string>;
+  journal_line_id: string | null;
+  statement_line_id: string | null;
+}
+
+export interface Reconciliations {
+  account_id: string;
+  book_balance: Numeric;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  details: Generated<Json>;
+  difference: Numeric;
+  id: Generated<string>;
+  note: string | null;
+  statement_balance: Numeric;
+  statement_date: string;
+  unmatched_book_net: Numeric;
+  unmatched_statement_net: Numeric;
+}
+
 export interface RolePermissions {
   company_id: string;
   permission_code: string;
@@ -1479,6 +1550,9 @@ export interface DB {
   attendance_days: AttendanceDays;
   audit_logs: AuditLogs;
   auth_events: AuthEvents;
+  bank_match_groups: BankMatchGroups;
+  bank_statement_imports: BankStatementImports;
+  bank_statement_lines: BankStatementLines;
   branches: Branches;
   bs_calendar: BsCalendar;
   companies: Companies;
@@ -1517,6 +1591,8 @@ export interface DB {
   purchase_order_lines: PurchaseOrderLines;
   purchase_orders: PurchaseOrders;
   receipts: Receipts;
+  reconciliation_matches: ReconciliationMatches;
+  reconciliations: Reconciliations;
   role_permissions: RolePermissions;
   roles: Roles;
   salary_structures: SalaryStructures;
