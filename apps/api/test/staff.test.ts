@@ -55,11 +55,23 @@ describe('roles', () => {
     expect(roles.map((r) => r.key)).toEqual(expect.arrayContaining(['HR_MANAGER', 'STAFF']));
     const me = (await staff.asha.client.get('/me/access')).body;
     expect(me.permissions).toEqual(['self.view']);
+    expect(me.staff).toMatchObject({ name: 'Asha Gurung' });
   });
   it('HR Manager cannot touch accounting data or roles', async () => {
     expect((await hr.get('/journals')).status).toBe(403);
     expect((await hr.get('/reports/trial-balance?from=2026-10-01&to=2026-10-31')).status).toBe(403);
     expect((await hr.get('/roles')).status).toBe(403);
+  });
+});
+
+describe('finance data stays out of reach of staff and HR logins', () => {
+  const FINANCE = ['/reports/summary', '/reports/aging/AR', '/reports/aging/AP', '/advance-adjustments', '/journals', '/accounts', '/contacts', '/items', '/tax-codes', '/approvals', '/users', '/audit-logs', '/sales-invoices', '/bills', '/receipts', '/payments', '/opening-balances'];
+  it('a Staff login gets 403 on every finance endpoint', async () => {
+    for (const url of FINANCE) expect((await staff.asha.client.get(url)).status, url).toBe(403);
+    expect((await staff.asha.client.post('/advance-adjustments/customer', { date: '2026-10-07', advanceId: staff.asha.id, targetId: staff.asha.id, amount: '1' })).status).toBe(403);
+  });
+  it('the HR Manager also gets 403 there (HR data only)', async () => {
+    for (const url of FINANCE) expect((await hr.get(url)).status, url).toBe(403);
   });
 });
 

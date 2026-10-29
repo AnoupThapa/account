@@ -6,6 +6,8 @@
  */
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { get } from '@/lib/api';
 import { useSession } from '@/components/providers';
@@ -24,7 +26,15 @@ function Tile({ label, value, sub, href }: { label: string; value: React.ReactNo
 
 export default function Home() {
   const { access, can } = useSession();
-  const s = useQuery({ queryKey: ['summary'], queryFn: () => get('/reports/summary') });
+  const router = useRouter();
+  const accounting = can('report.trial_balance.view');
+  // staff / HR logins have no accounting access: their home is the staff area
+  useEffect(() => {
+    if (!access || accounting) return;
+    if (access.staff) router.replace('/my');
+    else if (can('staff.view')) router.replace('/staff');
+  }, [access, accounting, can, router]);
+  const s = useQuery({ queryKey: ['summary'], queryFn: () => get('/reports/summary'), enabled: accounting });
   const ob = useQuery({ queryKey: ['opening'], queryFn: () => get('/opening-balances'), enabled: can('opening.view') });
   return (
     <div>
@@ -35,7 +45,9 @@ export default function Home() {
           This company is in <b>setup</b>. Enter <Link className="underline" href="/opening">opening balances</Link> and go live when Opening Balance Equity is zero.
         </div>
       )}
-      {!s.data ? (
+      {!accounting ? (
+        <p className="muted">Welcome. Use the menu to open your staff area.</p>
+      ) : !s.data ? (
         <Loading />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

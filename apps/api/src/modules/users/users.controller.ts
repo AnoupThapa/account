@@ -152,7 +152,8 @@ export class UsersController {
     return this.tx(ctx, async (trx) => {
       const company = await trx.selectFrom('companies').selectAll().where('id', '=', ctx.companyId).executeTakeFirstOrThrow();
       const roles = ctx.roleIds.length ? await trx.selectFrom('roles').select(['id', 'name', 'key']).where('id', 'in', ctx.roleIds).execute() : [];
-      return { company, roles, permissions: [...ctx.permissions].sort() };
+      const emp = await trx.selectFrom('employees').select(['id', 'full_name']).where('user_id', '=', ctx.userId).executeTakeFirst();
+      return { company, roles, permissions: [...ctx.permissions].sort(), staff: emp ? { id: emp.id, name: emp.full_name } : null };
     });
   }
 

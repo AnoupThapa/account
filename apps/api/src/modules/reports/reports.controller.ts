@@ -121,7 +121,8 @@ export class ReportsController {
     return this.reports.integrity(ctx);
   }
 
-  @Perm('member')
+  // Home-page figures (cash, receivables, profit): accounting users only — never staff self-service logins
+  @Perm('report.trial_balance.view')
   @Get('summary')
   summary(@Ctx() ctx: CompanyContext, @Query('asOf') asOf?: string) {
     return this.reports.summary(ctx, asOf && /^\d{4}-\d{2}-\d{2}$/.test(asOf) ? asOf : todayAd());

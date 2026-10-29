@@ -123,9 +123,11 @@ Owner instruction (summarised): (1) under the staff profile, a section for **att
 Amounts add up (database CHECKs); a sent payslip and an issued certificate cannot be edited (database trigger) — only cancelled; one active payslip per staff per period; numbers gapless; staff endpoints take **no employee id from the client** (the employee is derived from the login) so one staff member can never read another's data; HR endpoints need explicit permissions; every create/send/cancel/issue/correct action is audit-logged; all new tables carry `company_id` + row-level security.
 
 ### 12.4 Acceptance checks
-- [ ] Staff login sees only own profile, attendance, payslips and certificates (API test: other staff's records return 404/403).
-- [ ] HR Manager sees all staff and can generate/send payslips and issue certificates; cannot change roles or accounting data.
-- [ ] Payslip: gross/deductions/net add up; sent payslip is immutable; duplicate for same period refused; numbers gapless; email queued; staff sees it and can acknowledge.
-- [ ] TDS certificate: all eight owner-listed fields stored and printed; total receivable computed correctly; pre-fill from payslips equals their sum; immutable after issue; cancel keeps number.
-- [ ] Clock-in/out: late and half-day rules; double clock-in refused; HR correction needs a reason and is logged.
-- [ ] Cross-company isolation on every new table; permissions deny by default (403 without permission).
+- [x] Staff login sees only own profile, attendance, payslips and certificates (API test: other staff's records return 404/403).
+- [x] HR Manager sees all staff and can generate/send payslips and issue certificates; cannot change roles or accounting data.
+- [x] Payslip: gross/deductions/net add up; sent payslip is immutable; duplicate for same period refused; numbers gapless; email queued; staff sees it and can acknowledge.
+- [x] TDS certificate: all eight owner-listed fields stored and printed; total receivable computed correctly; pre-fill from payslips equals their sum; immutable after issue; cancel keeps number.
+- [x] Clock-in/out: late and half-day rules; double clock-in refused; HR correction needs a reason and is logged.
+- [x] Cross-company isolation on every new table; permissions deny by default (403 without permission).
+
+Results and evidence: [phase report](phase-reports/staff-portal.md).

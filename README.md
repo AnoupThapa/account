@@ -3,6 +3,7 @@
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. This repository is private. No part may be copied, used or shared without written permission. See [LICENSE](LICENSE).
 
 > **Status:** Phases 0–2 built and tested (foundation, core ledger, sales & purchases) — see [phase report](docs/phase-reports/phase-0-2.md).
+> **Staff portal & HR built** (staff login, HR Manager, attendance, payslips sent to staff, manual TDS certificates — [report](docs/phase-reports/staff-portal.md)).
 > **Phase 2B built and tested** — global tax systems, tax-system picker/builder, combined taxes, taxable/non-taxable choices ([report](docs/phase-reports/phase-2b.md)). Next in the plan: Phase 3 banking (docs/phases.md).
 > **Run it:** double-click `Start LedgerPro.cmd` on Windows after installing Node.js 22 and PostgreSQL 16 — step by step in [docs/dev-environment.md](docs/dev-environment.md) (Docker Desktop also works).
 > **Purpose:** Management accounting (not a statutory tax-filing tool) for trading, service, manufacturing and mixed businesses, following Nepal (NFRS / Nepal practice) and international (IFRS) accounting practice, with optional Australian GST support.
@@ -57,7 +58,7 @@ docs/         specification + phase reports
 | [12 Competitive Review](docs/12-competitive-gap-analysis.md) | PROPOSED: gaps vs Zoho/Xero/QuickBooks and improvement plan |
 | [13 Attendance & HR](docs/13-attendance-hr.md) | PROPOSED: attendance, leave, overtime, payroll-ready module |
 | [14 Global Tax Systems](docs/14-global-tax-systems.md) | PROPOSED: tax-system picker/builder, compound taxes, taxable/non-taxable options |
-| [15 Staff, Payroll & TDS](docs/15-staff-payroll-tds.md) | PROPOSED: staff records, attendance, salary/payslips, TDS register and certificates |
+| [15 Staff, Payroll & TDS](docs/15-staff-payroll-tds.md) | Staff portal, HR Manager, attendance, payslips, manual TDS certificates (built); rest PROPOSED |
 | [ip-protection.md](docs/ip-protection.md) | Copyright, trademark, confidentiality, contracts, customer licensing |
 
 ## Recommended stack (summary)

@@ -19,6 +19,8 @@
 | **Auditor** | Read-only all books, reports, audit log; export; cannot create anything |
 | **Project Manager** | Projects/tasks full; project P&L if granted |
 | **Team Member / Staff** | Assigned tasks, upload documents, submit expense claims |
+| **HR Manager** | All staff profiles, salary, attendance, payslips (generate/send/cancel), staff TDS certificates, HR settings. No accounting access. 2FA required. |
+| **Staff (self-service)** | Only their own profile, attendance (clock in/out), payslips and TDS certificates (`self.view`). Created per staff member from the HR screen; never sees accounting data. |
 | **Viewer / Owner-view** | Dashboard and selected reports only |
 
 ## 3. Report access

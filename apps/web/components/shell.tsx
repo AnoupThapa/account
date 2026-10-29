@@ -16,9 +16,30 @@ interface NavItem {
   href: string;
   label: string;
   perm?: string;
+  /** shown only when the signed-in user has a staff record (self-service) */
+  staffOnly?: boolean;
 }
 const NAV: { group: string; items: NavItem[] }[] = [
   { group: '', items: [{ href: '/', label: 'Home' }, { href: '/approvals', label: 'Approvals', perm: 'approval.view' }] },
+  {
+    group: 'My profile',
+    items: [
+      { href: '/my', label: 'My profile', perm: 'self.view', staffOnly: true },
+      { href: '/my/attendance', label: 'My attendance', perm: 'self.view', staffOnly: true },
+      { href: '/my/payslips', label: 'My payslips', perm: 'self.view', staffOnly: true },
+      { href: '/my/certificates', label: 'My TDS certificates', perm: 'self.view', staffOnly: true },
+    ],
+  },
+  {
+    group: 'Staff & HR',
+    items: [
+      { href: '/staff', label: 'Staff', perm: 'staff.view' },
+      { href: '/staff/attendance', label: 'Attendance', perm: 'attendance.view_all' },
+      { href: '/staff/payslips', label: 'Payslips', perm: 'payslip.view_all' },
+      { href: '/staff/certificates', label: 'TDS certificates', perm: 'tds_certificate.view' },
+      { href: '/settings/hr', label: 'HR settings', perm: 'hr.settings' },
+    ],
+  },
   {
     group: 'Sales',
     items: [
@@ -80,6 +101,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
 
 export function Shell({ children }: { children: ReactNode }) {
   const { me, access, companyId, selectCompany, can } = useSession();
+  const isStaff = !!access?.staff;
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -109,7 +131,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {companyId && (
           <nav className="p-2 text-sm">
             {NAV.map((g) => {
-              const items = g.items.filter((i) => !i.perm || can(i.perm));
+              const items = g.items.filter((i) => (!i.perm || can(i.perm)) && (!i.staffOnly || isStaff));
               if (!items.length) return null;
               return (
                 <div key={g.group} className="mb-2">

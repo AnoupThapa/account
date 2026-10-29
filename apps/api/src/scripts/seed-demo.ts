@@ -53,6 +53,8 @@ async function main() {
       [`checker.${c.prefix}@ledgerpro.local`, `Checker (${c.country})`, 'CHECKER'],
       [`finance.${c.prefix}@ledgerpro.local`, `Finance Manager (${c.country})`, 'FINANCE_MANAGER'],
       [`auditor.${c.prefix}@ledgerpro.local`, `Auditor (${c.country})`, 'AUDITOR'],
+      [`hr.${c.prefix}@ledgerpro.local`, `HR Manager (${c.country})`, 'HR_MANAGER'],
+      [`staff.${c.prefix}@ledgerpro.local`, c.country === 'NP' ? 'Sita Shrestha' : 'Jack Smith', 'STAFF'],
     ];
     await dbs.tenant(companyId, owner, async (trx) => {
       for (const [email, name, key] of users) {
@@ -60,6 +62,17 @@ async function main() {
         await trx.insertInto('user_companies').values({ user_id: uid, company_id: companyId! }).onConflict((oc) => oc.columns(['user_id', 'company_id']).doNothing()).execute();
         const role = await trx.selectFrom('roles').select('id').where('key', '=', key).executeTakeFirstOrThrow();
         await trx.insertInto('user_roles').values({ company_id: companyId!, user_id: uid, role_id: role.id }).onConflict((oc) => oc.columns(['user_id', 'role_id']).doNothing()).execute();
+      }
+      // Demo staff: one with a portal login (staff.<np|au>@…), one without; salaries so payslips can be tried straight away
+      const staffUser = await trx.selectFrom('users').select('id').where('email', '=', `staff.${c.prefix}@ledgerpro.local`).executeTakeFirstOrThrow();
+      const demoStaff = c.country === 'NP'
+        ? [['EMP-0001', 'Sita Shrestha', staffUser.id, 'Accountant Assistant', '45000', '5000', '2000'], ['EMP-0002', 'Ram Karki', null, 'Driver', '28000', '2000', '0']]
+        : [['EMP-0001', 'Jack Smith', staffUser.id, 'Barista', '5200', '300', '0'], ['EMP-0002', 'Mia Chen', null, 'Cook', '5600', '400', '0']];
+      for (const [code, nm, uid, title, basic, allow, other] of demoStaff) {
+        const have = await trx.selectFrom('employees').select('id').where('code', '=', code as string).executeTakeFirst();
+        if (have) continue;
+        const emp = await trx.insertInto('employees').values({ company_id: companyId!, code: code as string, full_name: nm as string, email: uid ? `staff.${c.prefix}@ledgerpro.local` : null, designation: title as string, department: 'Operations', join_date: '2026-07-20', pan: c.country === 'NP' ? '600987654' : null, user_id: uid as string | null, created_by: owner }).returning('id').executeTakeFirstOrThrow();
+        await trx.insertInto('salary_structures').values({ company_id: companyId!, employee_id: emp.id, effective_from: '2026-07-17', basic_salary: basic as string, allowance: allow as string, other_allowance: other as string, created_by: owner }).execute();
       }
       const contacts = c.country === 'NP'
         ? [['CUSTOMER', 'C00001', 'Himalayan Hotels Pvt. Ltd.', '600111222', 30], ['CUSTOMER', 'C00002', 'Kathmandu Clinic', '600333444', 15], ['SUPPLIER', 'S00001', 'Nepal Hygiene Suppliers', '300555666', 30], ['EMPLOYEE', 'E00001', 'Sita Shrestha', null, 0]]
@@ -85,8 +98,8 @@ async function main() {
   await app.close();
   console.log('\nDemo data ready. Sign in at http://localhost:3000 with any of:');
   console.log('  owner@ledgerpro.local (Super Admin + Company Admin of both demo companies)');
-  console.log('  accountant.np@ / checker.np@ / finance.np@ / auditor.np@ledgerpro.local');
-  console.log('  accountant.au@ / checker.au@ / finance.au@ / auditor.au@ledgerpro.local');
+  console.log('  accountant.np@ / checker.np@ / finance.np@ / auditor.np@ / hr.np@ / staff.np@ledgerpro.local');
+  console.log('  accountant.au@ / checker.au@ / finance.au@ / auditor.au@ / hr.au@ / staff.au@ledgerpro.local');
   console.log(`  Password for all demo users: ${PASSWORD}`);
   console.log('  (Admin/Checker/Finance roles must set up 2FA on first sign-in unless ENFORCE_2FA=false on this laptop.)\n');
 }

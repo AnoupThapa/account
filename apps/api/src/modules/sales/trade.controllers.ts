@@ -131,13 +131,13 @@ export class PaymentsController {
 @Controller('advance-adjustments')
 export class AdvanceAdjustmentsController {
   constructor(private readonly svc: MoneyDocsService) {}
-  @Perm('member') @Get() list(@Ctx() ctx: CompanyContext, @Query(new Zod(listQuery)) q: z.infer<typeof listQuery>) {
+  @Perm('receipt.view') @Get() list(@Ctx() ctx: CompanyContext, @Query(new Zod(listQuery)) q: z.infer<typeof listQuery>) {
     return this.svc.list(ctx, 'advance_adjustments', q);
   }
   @Perm('member') @Post(':side') create(@Ctx() ctx: CompanyContext, @Param('side') side: string, @Body(new Zod(advanceAdjSchema)) b: z.infer<typeof advanceAdjSchema>) {
     return this.svc.createAdvanceAdjustment(ctx, side.toUpperCase() === 'SUPPLIER' ? 'SUPPLIER' : 'CUSTOMER', b);
   }
-  @Perm('member') @Delete(':id') remove(@Ctx() ctx: CompanyContext, @Param('id') id: string) {
+  @Perm('receipt.create') @Delete(':id') remove(@Ctx() ctx: CompanyContext, @Param('id') id: string) {
     return this.svc.remove(ctx, 'ADVANCE_ADJUSTMENT', id);
   }
 }
