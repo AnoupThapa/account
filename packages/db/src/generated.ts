@@ -172,6 +172,22 @@ export interface ApprovalWorkflows {
   version: Generated<number>;
 }
 
+export interface AttendanceDays {
+  check_in: Timestamp | null;
+  check_out: Timestamp | null;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  edited_at: Timestamp | null;
+  edited_by: string | null;
+  employee_id: string;
+  id: Generated<string>;
+  remarks: string | null;
+  source: string;
+  status: string;
+  work_date: string;
+  worked_minutes: Generated<number>;
+}
+
 export interface AuditLogs {
   action: string;
   after: Json | null;
@@ -471,6 +487,35 @@ export interface DebitNotes {
   zero_rated_total: Generated<Numeric>;
 }
 
+export interface Employees {
+  address: string | null;
+  bank_account: string | null;
+  bank_name: string | null;
+  branch_id: string | null;
+  code: string;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  department: string | null;
+  designation: string | null;
+  email: string | null;
+  emergency_contact: string | null;
+  employment_type: Generated<string>;
+  exit_date: string | null;
+  full_name: string;
+  id: Generated<string>;
+  join_date: string | null;
+  notes: string | null;
+  pan: string | null;
+  phone: string | null;
+  ssf_no: string | null;
+  status: Generated<string>;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  user_id: string | null;
+  version: Generated<number>;
+}
+
 export interface ExpenseLines {
   account_id: string | null;
   company_id: string;
@@ -582,6 +627,19 @@ export interface GoodsReceipts {
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
   version: Generated<number>;
+}
+
+export interface HrSettings {
+  company_id: string;
+  grace_minutes: Generated<number>;
+  half_day_minutes: Generated<number>;
+  ssf_employee_pct: Generated<Numeric>;
+  ssf_employer_pct: Generated<Numeric>;
+  standard_minutes: Generated<number>;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  weekly_off: Generated<number[]>;
+  work_start: Generated<string>;
 }
 
 export interface IdempotencyKeys {
@@ -819,6 +877,42 @@ export interface Payments {
   version: Generated<number>;
 }
 
+export interface Payslips {
+  acknowledged_at: Timestamp | null;
+  allowance: Generated<Numeric>;
+  basic_salary: Numeric;
+  cancel_reason: string | null;
+  cancelled_at: Timestamp | null;
+  cancelled_by: string | null;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  employee_id: string;
+  gross_pay: Numeric;
+  id: Generated<string>;
+  net_pay: Numeric;
+  notes: string | null;
+  other_allowance: Generated<Numeric>;
+  other_deductions: Generated<Numeric>;
+  payslip_no: string | null;
+  period_end: string;
+  period_id: string;
+  period_label: string;
+  period_start: string;
+  print_count: Generated<number>;
+  sent_at: Timestamp | null;
+  sent_by: string | null;
+  ssf_employee: Generated<Numeric>;
+  ssf_employer: Generated<Numeric>;
+  status: Generated<string>;
+  tds_amount: Generated<Numeric>;
+  total_deductions: Numeric;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  version: Generated<number>;
+  viewed_at: Timestamp | null;
+}
+
 export interface Permissions {
   code: string;
   description: string;
@@ -1016,6 +1110,20 @@ export interface Roles {
   updated_at: Generated<Timestamp>;
   updated_by: string | null;
   version: Generated<number>;
+}
+
+export interface SalaryStructures {
+  allowance: Generated<Numeric>;
+  basic_salary: Numeric;
+  company_id: string;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  effective_from: string;
+  employee_id: string;
+  id: Generated<string>;
+  other_allowance: Generated<Numeric>;
+  other_deductions: Generated<Numeric>;
+  ssf_applicable: Generated<boolean>;
 }
 
 export interface SalesInvoiceLines {
@@ -1269,6 +1377,39 @@ export interface TaxRegimes {
   version: Generated<number>;
 }
 
+export interface TdsCertificates {
+  allowance: Generated<Numeric>;
+  basic_salary: Numeric;
+  cancel_reason: string | null;
+  cancelled_at: Timestamp | null;
+  cancelled_by: string | null;
+  cert_no: string;
+  company_id: string;
+  employee_id: string;
+  fiscal_year_id: string | null;
+  id: Generated<string>;
+  issued_at: Generated<Timestamp>;
+  issued_by: string | null;
+  notes: string | null;
+  other_allowance: Generated<Numeric>;
+  other_deductions: Generated<Numeric>;
+  period_from: string;
+  period_to: string;
+  print_count: Generated<number>;
+  source: string;
+  ssf_employee: Generated<Numeric>;
+  ssf_employer: Generated<Numeric>;
+  status: Generated<string>;
+  tds_deducted: Generated<Numeric>;
+  tds_deposit_date: string | null;
+  tds_deposit_ref: string | null;
+  total_receivable: Numeric;
+  total_remuneration: Numeric;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  version: Generated<number>;
+}
+
 export interface TdsCodes {
   code: string;
   company_id: string;
@@ -1335,6 +1476,7 @@ export interface DB {
   approval_requests: ApprovalRequests;
   approval_steps: ApprovalSteps;
   approval_workflows: ApprovalWorkflows;
+  attendance_days: AttendanceDays;
   audit_logs: AuditLogs;
   auth_events: AuthEvents;
   branches: Branches;
@@ -1348,11 +1490,13 @@ export interface DB {
   currencies: Currencies;
   debit_note_lines: DebitNoteLines;
   debit_notes: DebitNotes;
+  employees: Employees;
   expense_lines: ExpenseLines;
   expenses: Expenses;
   fiscal_years: FiscalYears;
   goods_receipt_lines: GoodsReceiptLines;
   goods_receipts: GoodsReceipts;
+  hr_settings: HrSettings;
   idempotency_keys: IdempotencyKeys;
   integration_outbox: IntegrationOutbox;
   items: Items;
@@ -1365,6 +1509,7 @@ export interface DB {
   opening_balances: OpeningBalances;
   password_resets: PasswordResets;
   payments: Payments;
+  payslips: Payslips;
   permissions: Permissions;
   posting_rules: PostingRules;
   purchase_bill_lines: PurchaseBillLines;
@@ -1374,6 +1519,7 @@ export interface DB {
   receipts: Receipts;
   role_permissions: RolePermissions;
   roles: Roles;
+  salary_structures: SalaryStructures;
   sales_invoice_lines: SalesInvoiceLines;
   sales_invoices: SalesInvoices;
   sales_order_lines: SalesOrderLines;
@@ -1385,6 +1531,7 @@ export interface DB {
   tax_codes: TaxCodes;
   tax_rates: TaxRates;
   tax_regimes: TaxRegimes;
+  tds_certificates: TdsCertificates;
   tds_codes: TdsCodes;
   uoms: Uoms;
   user_companies: UserCompanies;

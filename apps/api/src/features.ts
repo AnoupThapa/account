@@ -23,6 +23,11 @@ import { TradeDocsService } from './modules/sales/trade-docs.service';
 import { MoneyDocsService } from './modules/sales/money-docs.service';
 import { GrnService } from './modules/purchases/grn.service';
 import { PrintController, PrintService } from './modules/print/print.service';
+import { StaffController } from './modules/staff/staff.controller';
+import { AttendanceController, AttendanceService } from './modules/staff/attendance.controller';
+import { PayslipsController, PayslipService } from './modules/staff/payslips.controller';
+import { TdsCertificatesController, CertificateService } from './modules/staff/certificates.controller';
+import { SelfController } from './modules/staff/self.controller';
 import * as T from './modules/sales/trade.controllers';
 
 export const FEATURE_CONTROLLERS: any[] = [
@@ -48,6 +53,11 @@ export const FEATURE_CONTROLLERS: any[] = [
   T.AllocationsController,
   T.GoodsReceiptsController,
   PrintController,
+  StaffController,
+  AttendanceController,
+  PayslipsController,
+  TdsCertificatesController,
+  SelfController,
 ];
 export const FEATURE_PROVIDERS: any[] = [
   LedgerService,
@@ -63,4 +73,7 @@ export const FEATURE_PROVIDERS: any[] = [
   MoneyDocsService,
   GrnService,
   PrintService,
+  AttendanceService,
+  PayslipService,
+  CertificateService,
 ];

@@ -63,6 +63,9 @@ export class TestClient {
   post(url: string, body?: unknown, company = true) {
     return this.h(this.agent.post(url), company).send(body as object);
   }
+  put(url: string, body?: unknown, company = true) {
+    return this.h(this.agent.put(url), company).send(body as object);
+  }
   patch(url: string, body?: unknown, company = true) {
     return this.h(this.agent.patch(url), company).send(body as object);
   }

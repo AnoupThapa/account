@@ -47,6 +47,8 @@ function render(event: string, p: any): { to: string; subject: string; text: str
       return { to: p.to, subject: 'Reset your LedgerPro password', text: `Hello ${p.name},\n\nUse this link within 1 hour to choose a new password:\n${p.link}\n\nIf you did not ask for this, ignore this email.` };
     case 'ACCOUNT_LOCKED':
       return { to: p.to, subject: 'LedgerPro: your account was locked', text: `Hello ${p.name},\n\nAfter 5 failed sign-in attempts your account is locked for ${p.minutes} minutes (last attempt from ${p.ip ?? 'unknown IP'}). If this wasn't you, change your password and tell your administrator.` };
+    case 'PAYSLIP_SENT':
+      return { to: p.to, subject: `Your payslip for ${p.period} is ready`, text: `Hello ${p.name},\n\n${p.company} has issued your payslip ${p.payslipNo} for ${p.period}.\n${p.hasLogin ? 'Sign in to LedgerPro and open My profile → Payslips to view, print and acknowledge it.' : 'Please ask HR for your staff login to view it online.'}\n\nThis message does not contain salary details.` };
     case 'INTEGRITY_ALERT':
       return { to: p.to, subject: `CRITICAL: integrity check failed for ${p.company}`, text: p.text };
     default:

@@ -5,7 +5,7 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE.
  */
 import { Client } from 'pg';
-import { ALL_PERMISSIONS, PERMISSIONS, BS_MONTH_DAYS, BS_MIN_YEAR, BS_MAX_YEAR, BS_PROVISIONAL_FROM, toAD } from '@ledgerpro/shared';
+import { ALL_PERMISSIONS, PERMISSIONS, DEFAULT_ROLES, BS_MONTH_DAYS, BS_MIN_YEAR, BS_MAX_YEAR, BS_PROVISIONAL_FROM, toAD } from '@ledgerpro/shared';
 import { DEFAULT_POSTING_RULES } from './coa-templates';
 
 const CURRENCIES = [
@@ -46,6 +46,16 @@ export async function seedGlobal(adminUrl: string): Promise<void> {
     }
     for (const p of ALL_PERMISSIONS) {
       await c.query('INSERT INTO permissions (code, description) VALUES ($1,$2) ON CONFLICT (code) DO UPDATE SET description = EXCLUDED.description', [p, PERMISSIONS[p]]);
+    }
+    // Roles added after a company was created (HR Manager, Staff) are added to existing companies — never changed once present
+    for (const key of ['HR_MANAGER', 'STAFF']) {
+      const tpl = DEFAULT_ROLES.find((r) => r.key === key);
+      if (!tpl) continue;
+      const missing = await c.query('SELECT id FROM companies WHERE id NOT IN (SELECT company_id FROM roles WHERE key = $1)', [key]);
+      for (const co of missing.rows) {
+        const r = await c.query('INSERT INTO roles (company_id, key, name, description, requires_2fa, is_system) VALUES ($1,$2,$3,$4,$5,true) RETURNING id', [co.id, key, tpl.name, tpl.description, tpl.requires2fa]);
+        for (const perm of tpl.permissions) await c.query('INSERT INTO role_permissions (company_id, role_id, permission_code) VALUES ($1,$2,$3)', [co.id, r.rows[0].id, perm]);
+      }
     }
     const existing = Number((await c.query('SELECT count(*) FROM bs_calendar')).rows[0].count);
     if (existing === 0) {

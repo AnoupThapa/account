@@ -26,14 +26,14 @@ const TITLES: Record<string, string> = {
   PURCHASE_ORDER: 'Purchase Order',
 };
 
-const esc = (s: unknown) =>
+export const esc = (s: unknown) =>
   String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-function dual(ad: string | null) {
+export function dual(ad: string | null) {
   if (!ad) return '';
   try {
     return `${esc(formatBsLong(toBS(ad)))} BS <span class="muted">(${esc(formatAdLong(ad))})</span>`;
