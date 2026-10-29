@@ -183,12 +183,15 @@ export function parseAmount(raw: string | undefined): string | null {
 }
 
 /** Turn raw CSV rows (after the header row) into normalised statement rows, collecting a readable issue per bad row. */
-export function normaliseRows(rows: string[][], map: ColumnMapping, opt: ImportOptions): { lines: StatementRow[]; issues: RowIssue[] } {
+/** Banks print "-" for an empty cheque / reference cell. */
+const blankDash = (v: string | undefined) => ((v ?? '').trim() === '-' ? '' : (v ?? '').trim());
+
+export function normaliseRows(rows: string[][], map: ColumnMapping, opt: ImportOptions, firstRowNo = 2): { lines: StatementRow[]; issues: RowIssue[] } {
   const lines: StatementRow[] = [];
   const issues: RowIssue[] = [];
   const cell = (r: string[], i: number | null | undefined) => (i === null || i === undefined || i < 0 ? undefined : (r[i] ?? ''));
   rows.forEach((r, idx) => {
-    const rowNo = idx + 2; // +1 for header, +1 for 1-based
+    const rowNo = idx + firstRowNo; // 1-based row number in the file
     const txnDate = parseStatementDate(cell(r, map.date) ?? '', opt);
     if (!txnDate) return void issues.push({ row: rowNo, message: `Could not read the date "${cell(r, map.date) ?? ''}"` });
     let inn = d(0);
@@ -220,14 +223,83 @@ export function normaliseRows(rows: string[][], map: ColumnMapping, opt: ImportO
     lines.push({
       txnDate,
       description: (cell(r, map.description) ?? '').slice(0, 500),
-      reference: (cell(r, map.reference) ?? '').trim().slice(0, 100) || null,
-      chequeNo: (cell(r, map.chequeNo) ?? '').trim().slice(0, 40) || null,
+      reference: blankDash(cell(r, map.reference)).slice(0, 100) || null,
+      chequeNo: blankDash(cell(r, map.chequeNo)).slice(0, 40) || null,
       moneyIn: money(inn),
       moneyOut: money(out),
       balance,
     });
   });
   return { lines, issues };
+}
+
+// ---------------------------------------------------------------- statement tables (spreadsheet exports)
+export interface StatementTable {
+  header: string[];
+  body: string[][];
+  /** 1-based row number of the first body row in the file (for readable error messages). */
+  firstRowNo: number;
+  openingBalance: string | null;
+  closingBalance: string | null;
+  periodFrom: string | null;
+  periodTo: string | null;
+}
+const DATE_LIKE = /^\s*(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}[ \-/][A-Za-z]{3}[a-z]*[ \-/,]*\d{2,4})/;
+
+/**
+ * Many Nepali and Australian banks export a spreadsheet with title lines above the table and Opening / Closing Balance and
+ * "Total Records" lines around it. Find the real header row, keep only the transaction rows, and read the balances and period.
+ * Returns null when no header row with a date and amount columns is found.
+ */
+export function extractTable(rows: string[][]): StatementTable | null {
+  let h = -1;
+  for (let i = 0; i < Math.min(rows.length, 80); i++) {
+    const g = guessMapping(rows[i]);
+    if (g && (g.amount !== undefined || g.moneyIn !== undefined || g.moneyOut !== undefined)) {
+      h = i;
+      break;
+    }
+  }
+  if (h < 0) return null;
+  const header = rows[h];
+  const g = guessMapping(header)!;
+  const firstDataIdx = rows.findIndex((r, i) => i > h && DATE_LIKE.test(r[g.date] ?? ''));
+  const body = rows.slice(h + 1).filter((r) => DATE_LIKE.test(r[g.date] ?? ''));
+  const num = (v: string | undefined) => (v === undefined || v.trim() === '' || v.trim() === '-' ? null : parseAmount(v));
+  const descCol = g.description ?? -1;
+  const balCol = g.balance ?? -1;
+  const label = (r: string[], re: RegExp) => r.some((c) => re.test(c.trim()));
+  let openingBalance: string | null = null;
+  let closingBalance: string | null = null;
+  // 1) rows inside the table: "Opening Balance" / "Closing Balance" with the figure in the Balance column
+  for (const r of rows.slice(h + 1)) {
+    if (descCol >= 0 && balCol >= 0 && /^opening balance/i.test((r[descCol] ?? '').trim())) openingBalance = num(r[balCol]);
+    if (descCol >= 0 && balCol >= 0 && /^closing balance/i.test((r[descCol] ?? '').trim())) closingBalance = num(r[balCol]);
+  }
+  // 2) header block above the table: "Opening Balance : 1,000.00"
+  const firstNumberAfterLabel = (r: string[], re: RegExp) => {
+    const at = r.findIndex((c) => re.test(c.trim()));
+    if (at < 0) return null;
+    for (const c of r.slice(at + 1)) if (c.trim() && c.trim() !== ':' && num(c) !== null) return num(c);
+    return null;
+  };
+  for (const r of rows.slice(0, h)) {
+    if (openingBalance === null && label(r, /^opening balance/i)) openingBalance = firstNumberAfterLabel(r, /^opening balance/i);
+    if (closingBalance === null && label(r, /^closing balance/i)) closingBalance = firstNumberAfterLabel(r, /^closing balance/i);
+  }
+  // 3) "From 2026-09-29 To 2026-10-29"
+  let periodFrom: string | null = null;
+  let periodTo: string | null = null;
+  const iso = /^\d{4}-\d{2}-\d{2}$/;
+  const after = (r: string[], re: RegExp) => {
+    const at = r.findIndex((c) => re.test(c.trim()));
+    return at < 0 ? null : (r.slice(at + 1).map((c) => c.trim()).find((c) => iso.test(c)) ?? null);
+  };
+  for (const r of rows.slice(0, h)) {
+    periodFrom ??= after(r, /^from$/i);
+    periodTo ??= after(r, /^to$/i);
+  }
+  return { header, body, firstRowNo: (firstDataIdx < 0 ? h + 1 : firstDataIdx) + 1, openingBalance, closingBalance, periodFrom, periodTo };
 }
 
 // ---------------------------------------------------------------- matching
@@ -260,8 +332,11 @@ export interface Suggestion {
 const dayDiff = (a: string, b: string) => Math.abs((Date.parse(a + 'T00:00:00Z') - Date.parse(b + 'T00:00:00Z')) / 86400000);
 const clean = (s: string | null | undefined) => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
+/** Banks often put the cheque / invoice / transfer reference inside the description: take words that contain a digit. */
+const descTokens = (t: string) => (t.match(/[A-Za-z0-9][A-Za-z0-9/_-]{3,}/g) ?? []).filter((w) => /\d/.test(w) && !/^\d{4}-\d{2}-\d{2}$/.test(w)).map(clean).filter((k) => k.length >= 4 && k.length <= 30);
+
 function refHit(s: StmtItem, b: BookItem) {
-  const keys = [s.reference, s.chequeNo].map(clean).filter((k) => k.length >= 3);
+  const keys = [...[s.reference, s.chequeNo].map(clean).filter((k) => k.length >= 3), ...descTokens(s.description)];
   if (!keys.length) return false;
   const hay = [b.sourceNo, b.description].map(clean).filter(Boolean);
   const hay2 = clean(s.description);

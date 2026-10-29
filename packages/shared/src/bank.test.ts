@@ -5,7 +5,7 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE.
  */
 import { describe, expect, it } from 'vitest';
-import { groupBalances, guessMapping, normaliseRows, parseAmount, parseCsv, parseStatementDate, suggestMatches } from './bank';
+import { extractTable, groupBalances, guessMapping, normaliseRows, parseAmount, parseCsv, parseStatementDate, suggestMatches } from './bank';
 import { toBS } from './bsdate';
 
 describe('parseCsv', () => {
@@ -116,10 +116,58 @@ describe('suggestMatches', () => {
   });
 });
 
+describe('suggestMatches: reference found inside the bank description', () => {
+  it('matches on an invoice/receipt number written in the narration, even with a nearby same-amount rival', () => {
+    const r = suggestMatches(
+      [{ id: 's', date: '2026-10-10', amount: '1000.00', description: 'IPS credit from ABC Pvt Ltd for INV-2083/84-00012 thanks' }],
+      [
+        { id: 'b1', date: '2026-10-09', amount: '1000.00', sourceNo: 'RV-2083/84-00044', description: 'INV-2083/84-00012' },
+        { id: 'b2', date: '2026-10-10', amount: '1000.00', sourceNo: 'RV-2083/84-00045', description: 'something else' },
+      ],
+    );
+    expect(r[0]).toMatchObject({ tier: 'REFERENCE', auto: true, journalLineIds: ['b1'] });
+  });
+});
+
 describe('groupBalances', () => {
   it('requires both sides and equal sums', () => {
     expect(groupBalances(['100.00', '50.00'], ['150.00'])).toBe(true);
     expect(groupBalances(['100.00'], ['99.99'])).toBe(false);
     expect(groupBalances([], ['0.00'])).toBe(false);
   });
+});
+
+describe('extractTable: Nepali bank spreadsheet export (title lines, Opening/Closing Balance rows, footer)', () => {
+  const sheet = [
+    ['', '', 'Statement of Account', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Account Number', '', ':', '1234567890', '', '', '', ''],
+    ['', '', '', 'From', '2026-09-29', '', '', '', 'To', '', '2026-10-29', '', '', '', 'Account Type', '', ':', 'CACUR', '', '', '', ''],
+    ['', '', '', '   Account Name', '', '', ':', '', '', '', '', '', '', '', 'Opening Balance', '', ':', '343141.99', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Closing Balance', '', ':', '460488.49', '', '', '', ''],
+    ['', '', '', 'Date', '', 'Value Date', '', '', '', 'Chq. No.', '', 'Transaction Detail', '', '', '', 'Debit', 'Credit', '', 'Balance', '', '', ''],
+    ['', '', '', '-', '', '-', '', '', '', '-', '', 'Opening Balance', '', '', '', '0', '0', '', '343141.99', '', '', ''],
+    ['', '', '', '2026-09-29', '', '2026-09-29', '', '', '', '-', '', 'BANK transfer/BNKFT-842214/A PERSON', '', '', '', '27000', '0', '', '316141.99', '', '', ''],
+    ['', '', '', '2026-09-29', '', '2026-09-29', '', '', '', '-', '', 'ISR-BULK_EVE ZONE', '', '', '', '0', '488897.5', '', '805031.49', '', '', ''],
+    ['', '', '', '2026-10-09', '', '2026-10-09', '', '', '', '-', '', 'SALARY PAYMENT', '', '', '', '44527', '0', '', '460488.49', '', '', ''],
+    ['', '', '', '-', '', '-', '', '', '', '-', '', 'Closing Balance', '', '', '', '0', '0', '', '460488.49', '', '', ''],
+    ['', '', '', 'Record', '9', 'of', '', '9', '', '', '', '', '', 'Total', '371551', '', '488897.5', '', 'Page', '1', 'of', '1'],
+    ['', '', 'This statement is for reconciliation purpose only.'],
+  ];
+  const t = extractTable(sheet)!;
+  it('finds the header row, the transaction rows, the balances and the period', () => {
+    expect(t.header[3]).toBe('Date');
+    expect(t.body.length).toBe(3);
+    expect(t).toMatchObject({ openingBalance: '343141.99', closingBalance: '460488.49', periodFrom: '2026-09-29', periodTo: '2026-10-29', firstRowNo: 8 });
+  });
+  it('maps the columns and reads money in / out, treating "-" cheque numbers as empty', () => {
+    const map = guessMapping(t.header)!;
+    const { lines, issues } = normaliseRows(t.body, map, { dateFormat: 'YMD', calendar: 'AD' }, t.firstRowNo);
+    expect(issues).toEqual([]);
+    expect(lines.map((l) => [l.txnDate, l.moneyIn, l.moneyOut, l.balance, l.chequeNo])).toEqual([
+      ['2026-09-29', '0.00', '27000.00', '316141.99', null],
+      ['2026-09-29', '488897.50', '0.00', '805031.49', null],
+      ['2026-10-09', '0.00', '44527.00', '460488.49', null],
+    ]);
+  });
+  it('returns null when there is no table', () => expect(extractTable([['hello'], ['world']])).toBeNull());
 });

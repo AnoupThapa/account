@@ -95,6 +95,11 @@ describe('statement import', () => {
     expect(again.body).toMatchObject({ imported: 0, skipped: 9 });
     expect((await lines()).length).toBe(9); // two identical fees on one day are both kept
   });
+  it('keeps the period and closing balance printed on the statement so Finish can pre-fill them (cash account, separate from the bank tests)', async () => {
+    await maker.post(`/bank/accounts/${cash}/import`, { fileName: 'express.xls', periodFrom: '2026-10-01', periodTo: '2026-10-29', openingBalance: '343141.99', closingBalance: '460488.49', lines: [L('2026-10-29', 'ISR credit', '10.00', '0.00')] });
+    const imps = (await maker.get(`/bank/accounts/${cash}/imports`)).body as { file_name: string; closing_balance: string; period_to: string }[];
+    expect(imps[0]).toMatchObject({ file_name: 'express.xls', closing_balance: '460488.49', period_to: '2026-10-29' });
+  });
   it('rejects a line with both money in and out, and non-bank accounts', async () => {
     const bad = await maker.post(`/bank/accounts/${bank}/import`, { lines: [L('2026-10-30', 'x', '5', '5')] });
     expect(bad.body.code).toBe('BANK_IMPORT_FORMAT');
@@ -139,10 +144,10 @@ describe('matching', () => {
   it('the database itself refuses an unbalanced match, even if the API is bypassed', async () => {
     const db = await adminDb();
     try {
-      const co = (await db.query('SELECT company_id, id FROM bank_match_groups LIMIT 1')).rows[0];
+      const co = (await db.query('SELECT company_id, id, account_id FROM bank_match_groups WHERE account_id = $1 LIMIT 1', [bank])).rows[0];
       await db.query('BEGIN');
       const g = (await db.query('INSERT INTO bank_match_groups (company_id, account_id, method, created_by) SELECT company_id, account_id, $2, created_by FROM bank_match_groups WHERE id = $1 RETURNING id', [co.id, 'MANUAL'])).rows[0];
-      const sl = (await db.query("SELECT id, money_in - money_out AS amt FROM bank_statement_lines WHERE status = 'UNMATCHED' AND company_id = $1 LIMIT 1", [co.company_id])).rows[0];
+      const sl = (await db.query("SELECT id, money_in - money_out AS amt FROM bank_statement_lines WHERE status = 'UNMATCHED' AND company_id = $1 AND account_id = $2 LIMIT 1", [co.company_id, co.account_id])).rows[0];
       await db.query('INSERT INTO reconciliation_matches (company_id, group_id, statement_line_id, amount) VALUES ($1,$2,$3,$4)', [co.company_id, g.id, sl.id, sl.amt]);
       await expect(db.query('COMMIT')).rejects.toThrow(/BANK_MATCH_UNBALANCED/);
     } finally {

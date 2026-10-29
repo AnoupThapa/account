@@ -48,8 +48,8 @@ This is the core of Phase 3 in docs/phases.md. Rules come from docs/02 §11.
 Note: docs/database.md names a `bank_accounts` table; the app already treats bank/cash/wallet as ledger accounts (subtype), so statements point straight at the account – no duplicate table.
 
 ## 5. Statement file formats
-- **CSV** now (any bank; column mapping with a guess; date formats YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, "12 Jan 2026"; AD or BS dates; either separate money-in/money-out columns, one signed amount column, or amount + Dr/Cr column).
-- Excel / OFX / QIF / MT940 / CAMT.053 and saved bank templates are **later** (listed in Phase 3 in docs/phases.md; Excel files can be saved as CSV in the meantime).
+- **Excel (.xls / .xlsx) and CSV** (any bank). Spreadsheet exports with title lines, an Opening/Closing Balance row and a footer (e.g. the Nepali "Statement of Account" export: Date, Value Date, Chq. No., Transaction Detail, Debit, Credit, Balance) are read directly; the period and the closing balance printed on the statement are kept and pre-fill the Finish screen. Column mapping with a guess; date formats YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, "12 Jan 2026"; AD or BS dates; either separate money-in/money-out columns, one signed amount column, or amount + Dr/Cr column).
+- OFX / QIF / MT940 / CAMT.053 and saved bank templates are **later** (listed in Phase 3 in docs/phases.md). Spreadsheets are read in the browser with `@e965/xlsx` (Apache-2.0, the patched SheetJS build — the old `xlsx` package on npm has known vulnerabilities and is not used).
 
 ## 6. Acceptance checklist
 - [x] Import a Nepal-style CSV (BS dates, separate Dr/Cr) and an Australian CSV (DD/MM/YYYY, signed amount) — `packages/shared/src/bank.test.ts`

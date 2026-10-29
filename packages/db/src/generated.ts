@@ -228,11 +228,15 @@ export interface BankMatchGroups {
 
 export interface BankStatementImports {
   account_id: string;
+  closing_balance: Numeric | null;
   company_id: string;
   created_at: Generated<Timestamp>;
   created_by: string;
   file_name: string | null;
   id: Generated<string>;
+  opening_balance: Numeric | null;
+  period_from: string | null;
+  period_to: string | null;
   rows_imported: Generated<number>;
   rows_skipped: Generated<number>;
   rows_total: Generated<number>;

@@ -12,6 +12,7 @@
     "test": "echo 'web: covered by API tests + e2e (Phase 9)'"
   },
   "dependencies": {
+    "@e965/xlsx": "0.20.3",
     "@ledgerpro/shared": "workspace:*",
     "@tanstack/react-query": "^5.59.20",
     "lucide-react": "^0.460.0",

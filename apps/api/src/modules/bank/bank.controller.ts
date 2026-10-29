@@ -17,8 +17,13 @@ import { JournalsService } from '../journals/journals.service';
 import { ApprovalService } from '../approvals/approval.service';
 
 const uuid = z.string().uuid();
+const balance = z.string().regex(/^-?\d+(\.\d{1,2})?$/);
 const importSchema = z.object({
   fileName: z.string().max(200).optional(),
+  periodFrom: zAdDate.nullish(),
+  periodTo: zAdDate.nullish(),
+  openingBalance: balance.nullish(),
+  closingBalance: balance.nullish(),
   lines: z
     .array(
       z.object({
@@ -154,7 +159,7 @@ export class BankService {
         hashes.set(key, seq);
         return { ...l, hash: createHash('sha256').update(`${key}|${seq}`).digest('hex') };
       });
-      const imp = await trx.insertInto('bank_statement_imports').values({ company_id: ctx.companyId, account_id: accountId, file_name: b.fileName ?? null, rows_total: lines.length, created_by: ctx.userId }).returning('id').executeTakeFirstOrThrow();
+      const imp = await trx.insertInto('bank_statement_imports').values({ company_id: ctx.companyId, account_id: accountId, file_name: b.fileName ?? null, rows_total: lines.length, period_from: b.periodFrom ?? null, period_to: b.periodTo ?? null, opening_balance: b.openingBalance ? money(b.openingBalance) : null, closing_balance: b.closingBalance ? money(b.closingBalance) : null, created_by: ctx.userId }).returning('id').executeTakeFirstOrThrow();
       let imported = 0;
       for (let i = 0; i < prepared.length; i += 500) {
         const chunk = prepared.slice(i, i + 500);
@@ -486,6 +491,14 @@ export class BankService {
     });
   }
 
+  /** Uploaded statements, newest first — the latest one with a closing balance pre-fills the Finish screen. */
+  async imports(ctx: CompanyContext, accountId: string) {
+    return this.dbs.tenant(ctx.companyId, ctx.userId, async (trx) => {
+      await this.bankAccount(trx, accountId);
+      return trx.selectFrom('bank_statement_imports').select(['id', 'file_name', 'period_from', 'period_to', 'opening_balance', 'closing_balance', 'rows_imported', 'rows_skipped', 'created_at']).where('account_id', '=', accountId).orderBy('created_at', 'desc').limit(50).execute();
+    });
+  }
+
   async statement(ctx: CompanyContext, id: string) {
     return this.dbs.tenant(ctx.companyId, ctx.userId, async (trx) => {
       const r = await trx.selectFrom('reconciliations as r').innerJoin('users as u', 'u.id', 'r.created_by').selectAll('r').select('u.full_name as created_by_name').where('r.id', '=', id).executeTakeFirst();
@@ -546,6 +559,9 @@ export class BankController {
   }
   @Perm('bank.reconcile') @Post('accounts/:accountId/finish') finish(@Ctx() ctx: CompanyContext, @Param('accountId', new Zod(uuid)) id: string, @Body(new Zod(finishSchema)) b: z.infer<typeof finishSchema>) {
     return this.svc.finish(ctx, id, b);
+  }
+  @Perm('bank.view') @Get('accounts/:accountId/imports') imports(@Ctx() ctx: CompanyContext, @Param('accountId', new Zod(uuid)) id: string) {
+    return this.svc.imports(ctx, id);
   }
   @Perm('bank.view') @Get('accounts/:accountId/reconciliations') history(@Ctx() ctx: CompanyContext, @Param('accountId', new Zod(uuid)) id: string) {
     return this.svc.history(ctx, id);

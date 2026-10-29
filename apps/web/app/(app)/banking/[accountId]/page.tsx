@@ -179,6 +179,14 @@ function FinishDialog({ accountId, onClose, onDone }: { accountId: string; onClo
   const [bal, setBal] = useState('');
   const [note, setNote] = useState('');
   const [err, setErr] = useState<unknown>(null);
+  const imps = useQuery({ queryKey: ['bank', accountId, 'imports'], queryFn: () => get<any[]>(`/bank/accounts/${accountId}/imports`) });
+  const [prefilled, setPrefilled] = useState(false);
+  const latest = imps.data?.find((i) => i.closing_balance !== null);
+  if (latest && !prefilled) {
+    setPrefilled(true);
+    setBal(latest.closing_balance);
+    if (latest.period_to) setDate(latest.period_to);
+  }
   const valid = /^-?\d+(\.\d{1,2})?$/.test(bal.trim());
   const p = useQuery({ queryKey: ['bank', accountId, 'preview', date, bal], queryFn: () => get<any>(`/bank/accounts/${accountId}/reconcile-preview${qs({ date, balance: bal.trim() })}`), enabled: valid && /^\d{4}-\d{2}-\d{2}$/.test(date) });
   const save = async () => {
@@ -197,7 +205,7 @@ function FinishDialog({ accountId, onClose, onDone }: { accountId: string; onClo
         <ErrorBanner error={err} />
         <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Statement closing date"><input type="date" className="input" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} /></Field>
-          <Field label="Closing balance on the statement" hint="The balance printed at the bottom of the bank statement."><input className="input" inputMode="decimal" value={bal} onChange={(e) => setBal(e.target.value)} data-testid="finish-balance" /></Field>
+          <Field label="Closing balance on the statement" hint={latest ? `Pre-filled from ${latest.file_name ?? 'your last upload'} — change it if you reconcile to a different date.` : 'The balance printed at the bottom of the bank statement.'}><input className="input" inputMode="decimal" value={bal} onChange={(e) => setBal(e.target.value)} data-testid="finish-balance" /></Field>
         </div>
         {r && (
           <div className="panel p-3 text-sm space-y-1" data-testid="finish-math">
