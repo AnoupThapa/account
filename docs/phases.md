@@ -93,3 +93,4 @@ Public API & webhooks, NRB exchange rates, payment gateways (eSewa/Khalti/Fonepa
 - **Phase 4A — Go-to-market basics:** recurring documents, auto-reminders, import wizard (Tally/Excel/CSV), invoice branding, notification centre, CI/Docker proven.
 - **Phase 5A — Attendance, Leave & Payroll-ready (A1 → A3):** see docs/13. Do not start until the owner approves.
 - **Phase 2B — Tax engine v2 (BUILT 2026-10-28):** global tax regimes/packs, custom tax-system builder, compound taxes, taxable/non-taxable options on items and bills — see docs/14 and [report](phase-reports/phase-2b.md). Upload/OCR review part belongs to Phase 5.
+- **Staff, payroll & TDS (PROPOSED, docs/15):** T1 TDS register + certificates → S1 staff + attendance → S2 leave/overtime → S3 salary & payslips → S4 employee TDS certificates. Supersedes Phase 5A above. Not started.

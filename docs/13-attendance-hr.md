@@ -2,6 +2,8 @@
 
 > **CONFIDENTIAL & PROPRIETARY** — © 2026 Anoup Kumar Thapa. All rights reserved. Do not copy or share without written permission. See [LICENSE](../LICENSE).
 
+> **Extended by [docs/15](15-staff-payroll-tds.md)** (29 Oct 2026): salary/payroll and TDS certificates are now part of the plan; §2.8 and phase A3 below are superseded by docs/15 §4 and §9.
+
 ## 1. Purpose
 Record who worked when, handle leave and overtime, and turn approved attendance into a payroll-ready summary and a payroll **journal** that goes through the normal maker–checker ledger path. This also fits the existing "Team Member / Staff" role and timesheet idea in doc 08.
 

@@ -57,6 +57,7 @@ docs/         specification + phase reports
 | [12 Competitive Review](docs/12-competitive-gap-analysis.md) | PROPOSED: gaps vs Zoho/Xero/QuickBooks and improvement plan |
 | [13 Attendance & HR](docs/13-attendance-hr.md) | PROPOSED: attendance, leave, overtime, payroll-ready module |
 | [14 Global Tax Systems](docs/14-global-tax-systems.md) | PROPOSED: tax-system picker/builder, compound taxes, taxable/non-taxable options |
+| [15 Staff, Payroll & TDS](docs/15-staff-payroll-tds.md) | PROPOSED: staff records, attendance, salary/payslips, TDS register and certificates |
 | [ip-protection.md](docs/ip-protection.md) | Copyright, trademark, confidentiality, contracts, customer licensing |
 
 ## Recommended stack (summary)
