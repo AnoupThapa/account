@@ -86,6 +86,7 @@ Local passwords are in `infra/postgres/init.sql` and `.env.example` and are for 
 | `pnpm --filter @ledgerpro/db codegen` | regenerate TypeScript types after a migration |
 | `pnpm --filter @ledgerpro/db reset` | **dev only**: wipe and rebuild the database |
 | `node apps/web/e2e/smoke.mjs` | click through the main flow in a real browser (needs demo data) |
+| `node apps/web/e2e/bank-smoke.mjs` | upload a statement, auto-match, add a bank charge, finish the reconciliation (needs demo data, `ENFORCE_2FA=false`) |
 | `node apps/web/e2e/staff-smoke.mjs` | HR Manager sends payslips, staff member signs in and reviews them (needs demo data, `ENFORCE_2FA=false`) |
 | `node scripts/check-headers.mjs` | every source file has the copyright header |
 | `node scripts/check-licences.mjs` | no GPL/AGPL dependencies |

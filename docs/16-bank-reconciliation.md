@@ -52,12 +52,12 @@ Note: docs/database.md names a `bank_accounts` table; the app already treats ban
 - Excel / OFX / QIF / MT940 / CAMT.053 and saved bank templates are **later** (listed in Phase 3 in docs/phases.md; Excel files can be saved as CSV in the meantime).
 
 ## 6. Acceptance checklist
-- [ ] Import a Nepal-style CSV (BS dates, separate Dr/Cr) and an Australian CSV (DD/MM/YYYY, signed amount)
-- [ ] Re-importing the same file adds 0 lines
-- [ ] Books column lists posted receipts/payments/expenses/journals with descriptions; reversed entries are hidden
-- [ ] One-to-one, one-to-many and many-to-one matches work; unequal totals are refused
-- [ ] Auto-match applies safe matches and only suggests weaker ones
-- [ ] Receipt/payment/expense/journal created from a statement line matches itself once posted
-- [ ] Finish reconciliation only when difference is 0.00; matched items locked; un-match needs permission
-- [ ] BRS closing balance equals the statement balance
-- [ ] Staff/HR and users without `bank.*` get 403; other companies' data is invisible (RLS)
+- [x] Import a Nepal-style CSV (BS dates, separate Dr/Cr) and an Australian CSV (DD/MM/YYYY, signed amount) — `packages/shared/src/bank.test.ts`
+- [x] Re-importing the same file adds 0 lines
+- [x] Books column lists posted receipts/payments/expenses/journals with descriptions; reversed entries are hidden
+- [x] One-to-one, one-to-many and many-to-one matches work; unequal totals are refused
+- [x] Auto-match applies safe matches and only suggests weaker ones
+- [x] Receipt/payment/expense/journal created from a statement line matches itself once posted
+- [x] Finish reconciliation only when difference is 0.00; matched items locked; un-match needs permission
+- [x] BRS closing balance equals the statement balance
+- [x] Staff/HR and users without `bank.*` get 403; other companies' data is invisible (RLS)

@@ -33,7 +33,7 @@
 `stock_moves`, `stock_valuation_layers`, `boms`, `bom_lines`, `production_orders`, `production_consumptions`, `production_outputs`
 
 ### Banking & reconciliation
-`bank_accounts`, `bank_statement_imports`, `bank_statement_lines`, `reconciliations`, `reconciliation_matches`, `bank_import_templates`
+`bank_statement_imports`, `bank_statement_lines`, `bank_match_groups`, `reconciliation_matches`, `reconciliations` (built — migration 0007, see docs/16 §4; statements point straight at the bank/cash/wallet ledger account, so there is no separate `bank_accounts` table); later: `bank_import_templates`
 
 ### Fixed assets
 `asset_categories`, `fixed_assets`, `depreciation_runs`, `depreciation_lines`, `asset_disposals`

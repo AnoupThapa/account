@@ -66,6 +66,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: 'Accounting',
     items: [
+      { href: '/banking', label: 'Banking & reconciliation', perm: 'bank.view' },
       { href: '/journals', label: 'Journal vouchers', perm: 'journal.view' },
       { href: '/opening', label: 'Opening balances', perm: 'opening.view' },
       { href: '/accounts', label: 'Chart of accounts', perm: 'coa.view' },

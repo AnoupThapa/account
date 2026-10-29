@@ -5,7 +5,7 @@
 > **Status:** Phases 0–2 built and tested (foundation, core ledger, sales & purchases) — see [phase report](docs/phase-reports/phase-0-2.md).
 > **Testing phase:** 2FA and the forced password change are optional (`ENFORCE_2FA=false`, `FORCE_PASSWORD_CHANGE=false`); switch both on before real company data ([security.md](docs/security.md)).
 > **Staff portal & HR built** (staff login, HR Manager, attendance, payslips sent to staff, manual TDS certificates — [report](docs/phase-reports/staff-portal.md)).
-> **Phase 2B built and tested** — global tax systems, tax-system picker/builder, combined taxes, taxable/non-taxable choices ([report](docs/phase-reports/phase-2b.md)). Next in the plan: Phase 3 banking (docs/phases.md).
+> **Phase 2B built and tested** — global tax systems, tax-system picker/builder, combined taxes, taxable/non-taxable choices ([report](docs/phase-reports/phase-2b.md)). Bank reconciliation (statement upload, matching, create-from-statement, finish & lock) is built ([report](docs/phase-reports/bank-reconciliation.md)). Next in the plan: rest of Phase 3 (docs/phases.md).
 > **Run it:** double-click `Start LedgerPro.cmd` on Windows after installing Node.js 22 and PostgreSQL 16 — step by step in [docs/dev-environment.md](docs/dev-environment.md) (Docker Desktop also works).
 > **Purpose:** Management accounting (not a statutory tax-filing tool) for trading, service, manufacturing and mixed businesses, following Nepal (NFRS / Nepal practice) and international (IFRS) accounting practice, with optional Australian GST support.
 
