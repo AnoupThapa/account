@@ -32,6 +32,7 @@ export interface Access {
   company: any;
   roles: { id: string; name: string; key: string | null }[];
   permissions: string[];
+  staff?: { id: string; name: string } | null;
 }
 
 interface SessionValue {

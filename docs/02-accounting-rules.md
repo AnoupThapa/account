@@ -76,6 +76,8 @@ Five classes with normal balances:
 Templates for Service, Trading and Manufacturing are subsets of the above. Codes and names are editable except system accounts.
 
 ## 4. Tax (VAT / GST) rules — management purpose
+> **Proposed extension (not approved):** global tax systems, tax-system picker and compound taxes — see [14-global-tax-systems.md](14-global-tax-systems.md).
+
 - **Admin only** creates tax codes. Each code: name, rate %, type, effective-from/to, output account, input account, claimable flag.
 - Types: `STANDARD`, `ZERO_RATED`, `EXEMPT`, `OUT_OF_SCOPE`, `REVERSE_CHARGE` (future).
 - Defaults seeded: Nepal VAT 13% / 0% / Exempt; Australia GST 10% / GST-free / Input-taxed. Rates are data, not code — when a rate changes, admin adds a new rate with an effective date.

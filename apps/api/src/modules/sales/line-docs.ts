@@ -46,6 +46,8 @@ export const lineInputSchema = z.object({
   unitPrice: zQty,
   discountPercent: zRate.default('0'),
   taxCodeId: z.string().uuid().nullish(),
+  /** why this line's tax differs from the item's default (needed when the company requires a reason) */
+  taxOverrideReason: z.string().trim().max(300).nullish(),
   costCentreId: z.string().uuid().nullish(),
 });
 
@@ -82,6 +84,18 @@ export const lineDocSchema = z.object({
 });
 export type LineDocInput = z.infer<typeof lineDocSchema>;
 
+/** One tax component of a line (group/compound codes only; plain codes keep `tax_breakdown = null`). */
+export interface BreakdownEntry {
+  codeId: string;
+  code: string;
+  rate: string;
+  stacked: boolean;
+  amount: string;
+  claimable: boolean;
+  outputAccountId: string | null;
+  inputAccountId: string | null;
+}
+
 export interface ComputedLine {
   line_no: number;
   item_id: string | null;
@@ -101,6 +115,8 @@ export interface ComputedLine {
   cost_centre_id: string | null;
   output_account_id: string | null;
   input_account_id: string | null;
+  tax_breakdown: BreakdownEntry[] | null;
+  tax_override_reason: string | null;
 }
 
 export interface ComputedDoc {
@@ -118,21 +134,30 @@ export interface ComputedDoc {
 
 /** Resolve items/accounts/tax codes and compute every amount server-side (never trust client totals). */
 export async function computeLines(trx: Tx, ctx: CompanyContext, cfg: LineDocConfig, input: LineDocInput, tax: TaxService): Promise<ComputedDoc> {
-  const company = await trx.selectFrom('companies').select(['tax_rounding']).where('id', '=', ctx.companyId).executeTakeFirstOrThrow();
+  const company = await trx.selectFrom('companies').select(['tax_rounding', 'tax_override_reason_required']).where('id', '=', ctx.companyId).executeTakeFirstOrThrow();
   const itemIds = input.lines.map((l) => l.itemId).filter(Boolean) as string[];
   const items = itemIds.length ? await trx.selectFrom('items').selectAll().where('id', 'in', itemIds).execute() : [];
-  const resolved: { accountId: string | null; taxCodeId: string | null; itemId: string | null; description: string | null }[] = [];
+  const resolved: { accountId: string | null; taxCodeId: string | null; itemId: string | null; description: string | null; overrideReason: string | null }[] = [];
   for (const [i, l] of input.lines.entries()) {
     const item = l.itemId ? items.find((x) => x.id === l.itemId) : undefined;
     if (l.itemId && (!item || !item.is_active)) throw new AppError('VAL_FIELD', `Line ${i + 1}: unknown or inactive item`, undefined, [{ field: `lines.${i}.itemId`, message: 'Unknown item' }]);
     const accountId = l.accountId ?? (item ? (cfg.side === 'SALES' ? item.sales_account_id : item.is_stock_tracked ? item.inventory_account_id ?? item.purchase_account_id : item.purchase_account_id) : null);
     if (!accountId) throw new AppError('VAL_FIELD', `Line ${i + 1}: choose an item or an account`, undefined, [{ field: `lines.${i}.accountId`, message: 'Required' }]);
-    const taxCodeId = l.taxCodeId ?? item?.default_tax_code_id ?? null;
-    if (item && l.taxCodeId && l.taxCodeId !== item.default_tax_code_id && !ctx.permissions.has('item.tax_override')) {
-      throw new AppError('PERM_DENIED', `Line ${i + 1}: changing the item's tax code needs the "item.tax_override" permission`);
+    // purchase side of an item may have its own tax treatment (docs/14 §3.3); NULL = same as the sales side
+    const purchaseOwn = cfg.side === 'PURCHASE' && !!item?.purchase_tax_applicability;
+    const defApplic = item ? (purchaseOwn ? item.purchase_tax_applicability : item.tax_applicability) : null;
+    const defCodeId = item ? (purchaseOwn ? item.purchase_default_tax_code_id : item.default_tax_code_id) : null;
+    const taxCodeId = l.taxCodeId ?? defCodeId ?? null;
+    let overrideReason: string | null = null;
+    if (item && l.taxCodeId && l.taxCodeId !== defCodeId) {
+      if (!ctx.permissions.has('item.tax_override')) throw new AppError('PERM_DENIED', `Line ${i + 1}: changing the item's tax code needs the "item.tax_override" permission`);
+      overrideReason = l.taxOverrideReason?.trim() || null;
+      if (company.tax_override_reason_required && !overrideReason) {
+        throw new AppError('VAL_FIELD', `Line ${i + 1}: give a reason for changing the item's tax treatment`, undefined, [{ field: `lines.${i}.taxOverrideReason`, message: 'Reason required' }]);
+      }
     }
-    if (!taxCodeId && item && item.tax_applicability === 'TAXABLE') throw new AppError('VAL_FIELD', `Line ${i + 1}: taxable item has no tax code`);
-    resolved.push({ accountId, taxCodeId, itemId: item?.id ?? null, description: l.description ?? item?.name ?? null });
+    if (!taxCodeId && item && defApplic === 'TAXABLE') throw new AppError('VAL_FIELD', `Line ${i + 1}: taxable item has no tax code`);
+    resolved.push({ accountId, taxCodeId, itemId: item?.id ?? null, description: l.description ?? item?.name ?? null, overrideReason });
   }
   // accounts must be active ledger accounts, not control accounts (those are posted by the system)
   const acctIds = [...new Set(resolved.map((r) => r.accountId).filter(Boolean) as string[])];
@@ -156,7 +181,7 @@ export async function computeLines(trx: Tx, ctx: CompanyContext, cfg: LineDocCon
   const calc = calculateTax(
     input.lines.map((l, i) => {
       const t = resolved[i].taxCodeId ? taxInfos.get(resolved[i].taxCodeId!)! : null;
-      return { quantity: l.quantity, unitPrice: l.unitPrice, discountPercent: l.discountPercent, taxType: (t?.type ?? 'OUT_OF_SCOPE') as TaxType, taxRate: t?.rate ?? '0' };
+      return { quantity: l.quantity, unitPrice: l.unitPrice, discountPercent: l.discountPercent, taxType: (t?.type ?? 'OUT_OF_SCOPE') as TaxType, taxRate: t?.rate ?? '0', components: t?.components?.map((c) => ({ rate: c.rate, stacked: c.stacked })) };
     }),
     { pricesIncludeTax: input.pricesIncludeTax, rounding: company.tax_rounding as 'LINE' | 'DOCUMENT' },
   );
@@ -166,7 +191,13 @@ export async function computeLines(trx: Tx, ctx: CompanyContext, cfg: LineDocCon
     const t = resolved[i].taxCodeId ? taxInfos.get(resolved[i].taxCodeId!)! : null;
     const c = calc.lines[i];
     const claimable = t ? t.isClaimable : true;
-    if (cfg.side === 'PURCHASE' && !claimable) nonClaimable = nonClaimable.plus(c.tax);
+    const breakdown: BreakdownEntry[] | null = t?.components
+      ? t.components.map((comp, k) => ({ codeId: comp.id, code: comp.code, rate: comp.rate, stacked: comp.stacked, amount: c.componentTax[k], claimable: comp.isClaimable, outputAccountId: comp.outputAccountId, inputAccountId: comp.inputAccountId }))
+      : null;
+    if (cfg.side === 'PURCHASE') {
+      if (breakdown) for (const b of breakdown) if (!b.claimable) nonClaimable = nonClaimable.plus(b.amount);
+      if (!breakdown && !claimable) nonClaimable = nonClaimable.plus(c.tax);
+    }
     return {
       line_no: i + 1,
       item_id: resolved[i].itemId,
@@ -186,6 +217,8 @@ export async function computeLines(trx: Tx, ctx: CompanyContext, cfg: LineDocCon
       cost_centre_id: l.costCentreId ?? null,
       output_account_id: t?.outputAccountId ?? null,
       input_account_id: t?.inputAccountId ?? null,
+      tax_breakdown: breakdown,
+      tax_override_reason: resolved[i].overrideReason,
     };
   });
   return {
@@ -212,6 +245,7 @@ export interface StoredLine {
   is_claimable: boolean;
   cost_centre_id: string | null;
   project_id: string | null;
+  tax_breakdown?: BreakdownEntry[] | null;
 }
 
 /**
@@ -222,7 +256,7 @@ export interface StoredLine {
 export async function lineDocComponents(trx: Tx, kind: LineDocKind, doc: Record<string, any>, lines: StoredLine[]): Promise<PostingComponent[]> {
   const taxAcct = new Map<string, { output: string | null; input: string | null }>();
   for (const l of lines) {
-    if (l.tax_code_id && !taxAcct.has(l.tax_code_id)) {
+    if (l.tax_code_id && !l.tax_breakdown && !taxAcct.has(l.tax_code_id)) {
       const tc = await trx.selectFrom('tax_codes').select(['output_account_id', 'input_account_id']).where('id', '=', l.tax_code_id).executeTakeFirstOrThrow();
       taxAcct.set(l.tax_code_id, { output: tc.output_account_id, input: tc.input_account_id });
     }
@@ -239,18 +273,27 @@ export async function lineDocComponents(trx: Tx, kind: LineDocKind, doc: Record<
     const cashAcct = isInv ? doc.cash_account_id : doc.refund_account_id;
     c.push(cashAcct ? { role: 'CASH', amount: grand, accountId: cashAcct, contactId: contact, description: isInv ? 'Cash sale' : 'Cash refund' } : { role: 'RECEIVABLE', amount: grand, contactId: contact });
     for (const l of lines) c.push({ ...base(l), role: isInv ? 'REVENUE' : 'SALES_RETURN', amount: l.net_amount, accountId: isInv ? l.account_id : null });
-    for (const l of taxLines) c.push({ ...base(l), role: 'OUTPUT_TAX', amount: l.tax_amount, accountId: taxAcct.get(l.tax_code_id!)!.output, description: 'Output VAT/GST' });
-    if (!adj.isZero() && taxLines[0]) c.push({ ...base(taxLines[0]), role: 'OUTPUT_TAX', amount: money(adj), accountId: taxAcct.get(taxLines[0].tax_code_id!)!.output, description: 'VAT/GST rounding (per document)' });
+    for (const l of taxLines) {
+      if (l.tax_breakdown) for (const b of l.tax_breakdown.filter((x) => d(x.amount).gt(0))) c.push({ ...base(l), taxCodeId: b.codeId, role: 'OUTPUT_TAX', amount: b.amount, accountId: b.outputAccountId, description: `Output ${b.code}` });
+      else c.push({ ...base(l), role: 'OUTPUT_TAX', amount: l.tax_amount, accountId: taxAcct.get(l.tax_code_id!)!.output, description: 'Output VAT/GST' });
+    }
+    if (!adj.isZero() && taxLines[0]) {
+      const first = taxLines[0].tax_breakdown?.find((x) => d(x.amount).gt(0));
+      c.push({ ...base(taxLines[0]), ...(first ? { taxCodeId: first.codeId } : {}), role: 'OUTPUT_TAX', amount: money(adj), accountId: first ? first.outputAccountId : taxAcct.get(taxLines[0].tax_code_id!)!.output, description: 'VAT/GST rounding (per document)' });
+    }
   } else {
     // purchase side: bill, debit note, expense
-    for (const l of lines) {
-      const cost = l.is_claimable ? d(l.net_amount) : d(l.net_amount).plus(l.tax_amount); // non-claimable tax added to cost
-      c.push({ ...base(l), role: 'EXPENSE', amount: money(cost), accountId: l.account_id, contactId: null });
+    // non-claimable tax is added to the cost of the line (per component for group codes)
+    const nonClaimOf = (l: StoredLine) => (l.tax_breakdown ? sum(l.tax_breakdown.filter((x) => !x.claimable).map((x) => x.amount)) : l.is_claimable ? d(0) : d(l.tax_amount));
+    for (const l of lines) c.push({ ...base(l), role: 'EXPENSE', amount: money(d(l.net_amount).plus(nonClaimOf(l))), accountId: l.account_id, contactId: null });
+    const claimTax = taxLines.filter((l) => l.tax_breakdown ? l.tax_breakdown.some((x) => x.claimable && d(x.amount).gt(0)) : l.is_claimable);
+    for (const l of claimTax) {
+      if (l.tax_breakdown) for (const b of l.tax_breakdown.filter((x) => x.claimable && d(x.amount).gt(0))) c.push({ ...base(l), taxCodeId: b.codeId, role: 'INPUT_TAX', amount: b.amount, accountId: b.inputAccountId, description: `Input ${b.code}` });
+      else c.push({ ...base(l), role: 'INPUT_TAX', amount: l.tax_amount, accountId: taxAcct.get(l.tax_code_id!)!.input, description: 'Input VAT/GST' });
     }
-    const claimTax = taxLines.filter((l) => l.is_claimable);
-    for (const l of claimTax) c.push({ ...base(l), role: 'INPUT_TAX', amount: l.tax_amount, accountId: taxAcct.get(l.tax_code_id!)!.input, description: 'Input VAT/GST' });
     if (!adj.isZero()) {
-      if (claimTax[0]) c.push({ ...base(claimTax[0]), role: 'INPUT_TAX', amount: money(adj), accountId: taxAcct.get(claimTax[0].tax_code_id!)!.input, description: 'VAT/GST rounding (per document)' });
+      const first = claimTax[0]?.tax_breakdown?.find((x) => x.claimable && d(x.amount).gt(0));
+      if (claimTax[0]) c.push({ ...base(claimTax[0]), ...(first ? { taxCodeId: first.codeId } : {}), role: 'INPUT_TAX', amount: money(adj), accountId: first ? first.inputAccountId : taxAcct.get(claimTax[0].tax_code_id!)!.input, description: 'VAT/GST rounding (per document)' });
       else if (lines[0]) c.push({ ...base(lines[0]), role: 'EXPENSE', amount: money(adj), accountId: lines[0].account_id });
     }
     if (kind === 'PURCHASE_BILL') c.push({ role: 'PAYABLE', amount: grand, contactId: contact });

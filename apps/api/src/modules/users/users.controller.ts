@@ -7,7 +7,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { sql } from 'kysely';
-import { AppError, ALL_PERMISSIONS, PERMISSIONS, zMoneyNonNeg, zPassword } from '@ledgerpro/shared';
+import { AppError, ALL_PERMISSIONS, PERMISSIONS, patchSchema, zMoneyNonNeg, zPassword } from '@ledgerpro/shared';
 import { Ctx, Perm, StepUp, Zod } from '../../common/decorators';
 import type { CompanyContext } from '../../common/context';
 import { DatabaseService, Tx } from '../../common/database.service';
@@ -152,7 +152,8 @@ export class UsersController {
     return this.tx(ctx, async (trx) => {
       const company = await trx.selectFrom('companies').selectAll().where('id', '=', ctx.companyId).executeTakeFirstOrThrow();
       const roles = ctx.roleIds.length ? await trx.selectFrom('roles').select(['id', 'name', 'key']).where('id', 'in', ctx.roleIds).execute() : [];
-      return { company, roles, permissions: [...ctx.permissions].sort() };
+      const emp = await trx.selectFrom('employees').select(['id', 'full_name']).where('user_id', '=', ctx.userId).executeTakeFirst();
+      return { company, roles, permissions: [...ctx.permissions].sort(), staff: emp ? { id: emp.id, name: emp.full_name } : null };
     });
   }
 
@@ -193,7 +194,7 @@ export class UsersController {
   @Perm('role.manage')
   @StepUp()
   @Patch('roles/:id')
-  updateRole(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(roleSchema.partial())) b: Partial<z.infer<typeof roleSchema>>) {
+  updateRole(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(roleSchema))) b: Partial<z.infer<typeof roleSchema>>) {
     return this.tx(ctx, async (trx) => {
       const before = await trx.selectFrom('roles').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

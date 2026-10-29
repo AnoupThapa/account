@@ -7,7 +7,7 @@
 import { BS_MONTHS_EN, daysInBsMonth, toAD, toBS, addDays } from './bsdate';
 import { AppError } from './errors';
 
-export type Country = 'NP' | 'AU' | 'OTHER';
+export type Country = string; // ISO 3166-1 alpha-2, or 'OTHER'
 export type CalendarMode = 'BS' | 'AD';
 
 export interface PeriodDef {

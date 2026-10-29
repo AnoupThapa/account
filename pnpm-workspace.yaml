@@ -6,3 +6,9 @@ onlyBuiltDependencies:
   - esbuild
   - "@swc/core"
   - sharp
+# Security: force patched versions of transitive dependencies (pnpm audit, Oct 2026)
+overrides:
+  postcss: ">=8.5.23"
+  multer: ">=2.5.0"
+  body-parser: ">=2.4.0"
+  qs: ">=6.16.1"

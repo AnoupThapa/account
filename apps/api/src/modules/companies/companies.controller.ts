@@ -6,7 +6,7 @@
  */
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
-import { AppError, companyCreateSchema } from '@ledgerpro/shared';
+import { AppError, companyCreateSchema, patchSchema } from '@ledgerpro/shared';
 import { Ctx, NoCompany, Perm, StepUp, SuperAdminOnly, Zod } from '../../common/decorators';
 import type { CompanyContext, RequestContext } from '../../common/context';
 import { DatabaseService } from '../../common/database.service';
@@ -20,6 +20,7 @@ const updateSchema = z.object({
   pan: z.string().max(20).nullish(),
   vatNo: z.string().max(20).nullish(),
   abn: z.string().max(20).nullish(),
+  taxId: z.string().max(30).nullish(),
   address: z.string().max(500).nullish(),
   phone: z.string().max(40).nullish(),
   email: z.string().email().nullish().or(z.literal('')),
@@ -65,6 +66,7 @@ export class CompaniesController {
           pan: b.pan === undefined ? before.pan : b.pan,
           vat_no: b.vatNo === undefined ? before.vat_no : b.vatNo,
           abn: b.abn === undefined ? before.abn : b.abn,
+          tax_id: b.taxId === undefined ? before.tax_id : b.taxId,
           address: b.address === undefined ? before.address : b.address,
           phone: b.phone === undefined ? before.phone : b.phone,
           email: b.email === undefined ? before.email : b.email || null,
@@ -127,7 +129,7 @@ export class CompaniesController {
 
   @Perm('branch.manage')
   @Patch('current/branches/:id')
-  updateBranch(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(branchSchema.partial())) b: Partial<z.infer<typeof branchSchema>>) {
+  updateBranch(@Ctx() ctx: CompanyContext, @Param('id') id: string, @Body(new Zod(patchSchema(branchSchema))) b: Partial<z.infer<typeof branchSchema>>) {
     return this.dbs.tenant(ctx.companyId, ctx.userId, async (trx) => {
       const before = await trx.selectFrom('branches').selectAll().where('id', '=', id).forUpdate().executeTakeFirst();
       if (!before) throw new AppError('NOT_FOUND');

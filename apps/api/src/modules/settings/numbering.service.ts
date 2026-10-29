@@ -11,6 +11,8 @@ import type { Tx } from '../../common/database.service';
 
 const PREFIXES: Record<string, string> = {
   JOURNAL_ENTRY: 'JE',
+  PAYSLIP: 'PS',
+  TDS_CERTIFICATE: 'TDSC',
   ...Object.fromEntries(Object.entries(DOC_TYPES).map(([k, v]) => [k, v.prefix])),
   ...Object.fromEntries(Object.entries(NONPOSTING_DOC_TYPES).map(([k, v]) => [k, v.prefix])),
 };

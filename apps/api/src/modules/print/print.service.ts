@@ -26,14 +26,14 @@ const TITLES: Record<string, string> = {
   PURCHASE_ORDER: 'Purchase Order',
 };
 
-const esc = (s: unknown) =>
+export const esc = (s: unknown) =>
   String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-function dual(ad: string | null) {
+export function dual(ad: string | null) {
   if (!ad) return '';
   try {
     return `${esc(formatBsLong(toBS(ad)))} BS <span class="muted">(${esc(formatAdLong(ad))})</span>`;
@@ -97,14 +97,18 @@ export class PrintService implements OnModuleDestroy {
       }
       const date = doc[cfg.dateField];
       const cur = doc.currency_code ?? co.base_currency;
-      const taxName = co.country === 'AU' ? 'GST' : 'VAT';
+      const regime = co.tax_regime_id ? await trx.selectFrom('tax_regimes').select(['tax_label', 'tax_id_label', 'invoice_title']).where('id', '=', co.tax_regime_id).executeTakeFirst() : undefined;
+      const taxName = regime?.tax_label ?? (co.country === 'AU' ? 'GST' : 'VAT');
+      const taxIdLabel = regime?.tax_id_label ?? (co.country === 'AU' ? 'ABN' : 'PAN/VAT No.');
       const hasTax = d(doc.tax_total ?? 0).gt(0);
       let title = TITLES[kind];
-      if (kind === 'SALES_INVOICE' && hasTax) title = co.country === 'AU' ? 'Tax Invoice' : 'Tax Invoice';
+      if (kind === 'SALES_INVOICE' && hasTax) title = regime?.invoice_title ?? 'Tax Invoice';
       if (kind === 'SALES_INVOICE' && doc.cash_account_id) title += ' (Cash)';
       const copyLabel = !printable ? 'DRAFT — NOT A VALID DOCUMENT' : printNo <= 1 ? 'Original' : `Copy of original (${printNo - 1})`;
-      const idLabel = (c: { pan?: string | null; abn?: string | null; vat_no?: string | null } | null | undefined) =>
-        !c ? '' : co.country === 'AU' ? (c.abn ? `ABN ${esc(c.abn)}` : '') : c.pan ? `PAN/VAT No. ${esc(c.pan)}` : '';
+      const idLabel = (c: { pan?: string | null; abn?: string | null; vat_no?: string | null; tax_id?: string | null } | null | undefined) => {
+        const v = !c ? '' : co.country === 'AU' ? c.abn ?? c.tax_id : co.country === 'NP' ? c.pan ?? c.vat_no ?? c.tax_id : c.tax_id ?? c.vat_no ?? c.pan ?? c.abn;
+        return v ? `${esc(taxIdLabel)} ${esc(v)}` : '';
+      };
       const partyName = doc.buyer_name ?? contact?.name ?? 'Cash / Direct';
       const rows = lines
         .map(
@@ -143,7 +147,7 @@ ${doc.status === 'CANCELLED' ? '<div class="stamp">CANCELLED</div>' : ''}
 <div class="top">
   <div><div style="font-size:16px;font-weight:700">${esc(co.legal_name ?? co.name)}</div>
   <div class="muted">${esc(co.address ?? '')}</div>
-  <div class="muted">${idLabel({ pan: co.pan ?? co.vat_no, abn: co.abn })}${co.phone ? ' · ' + esc(co.phone) : ''}${co.email ? ' · ' + esc(co.email) : ''}</div></div>
+  <div class="muted">${idLabel({ pan: co.pan ?? co.vat_no, abn: co.abn, tax_id: co.tax_id })}${co.phone ? ' · ' + esc(co.phone) : ''}${co.email ? ' · ' + esc(co.email) : ''}</div></div>
   <div style="text-align:right"><h1>${esc(title)}</h1>
   <div><b>No.</b> ${esc(doc.doc_no ?? 'DRAFT')}</div>
   <div><b>Date:</b> ${dual(date)}</div>

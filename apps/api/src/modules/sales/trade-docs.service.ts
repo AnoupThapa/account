@@ -283,6 +283,8 @@ export class TradeDocsService implements OnModuleInit {
           tax_amount: l.tax_amount,
           total_amount: l.total_amount,
           cost_centre_id: l.cost_centre_id,
+          tax_breakdown: l.tax_breakdown ? JSON.stringify(l.tax_breakdown) : null,
+          tax_override_reason: l.tax_override_reason,
         })),
       )
       .execute();
@@ -404,7 +406,7 @@ export class TradeDocsService implements OnModuleInit {
       purchaseOrderId: from === 'PURCHASE_ORDER' ? id : undefined,
       supplierInvoiceNo: extra.supplierInvoiceNo,
       reference: src.customer_ref ?? undefined,
-      lines: src.lines.map((l: any) => ({ itemId: l.item_id, accountId: l.account_id, description: l.description, quantity: l.quantity, unitPrice: l.unit_price, discountPercent: l.discount_percent, taxCodeId: l.tax_code_id, costCentreId: l.cost_centre_id })),
+      lines: src.lines.map((l: any) => ({ itemId: l.item_id, accountId: l.account_id, description: l.description, quantity: l.quantity, unitPrice: l.unit_price, discountPercent: l.discount_percent, taxCodeId: l.tax_code_id, taxOverrideReason: l.tax_override_reason, costCentreId: l.cost_centre_id })),
       ...extra,
     } as LineDocInput;
     const created = await this.create(ctx, to, input);

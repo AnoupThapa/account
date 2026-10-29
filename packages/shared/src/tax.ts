@@ -24,6 +24,12 @@ export interface TaxLineInput {
   discountAmount?: DecInput; // absolute, applied after percent
   taxType: TaxType;
   taxRate: DecInput; // percent, e.g. 13 for 13%
+  /**
+   * Group tax (CGST+SGST, GST+PST …): when present (and taxType is STANDARD) the line is taxed by each component.
+   * Parallel components are charged on the net amount; a stacked component is charged on net + earlier components.
+   * `taxRate` is ignored in that case.
+   */
+  components?: { rate: DecInput; stacked?: boolean }[];
 }
 
 export interface TaxLineResult {
@@ -32,6 +38,7 @@ export interface TaxLineResult {
   net: string; // amount EXCLUDING tax after discount
   tax: string;
   total: string; // net + tax
+  componentTax: string[]; // tax per component, in order (one entry for a plain tax code); sums to `tax`
   taxable: string; // net if STANDARD (incl. 0% standard), else 0
   zeroRated: string;
   exempt: string; // EXEMPT + OUT_OF_SCOPE net amounts
@@ -59,10 +66,28 @@ function lineRaw(l: TaxLineInput, inclusive: boolean) {
   const disc = gross.times(pct).div(100).plus(d(l.discountAmount ?? 0));
   if (disc.gt(gross)) throw new Error('Discount exceeds line amount');
   const afterDisc = gross.minus(disc);
-  const rate = l.taxType === 'STANDARD' ? d(l.taxRate) : d(0);
+  const comps = l.taxType === 'STANDARD' && l.components?.length ? l.components.map((c) => ({ rate: d(c.rate), stacked: !!c.stacked })) : null;
+  if (comps && comps.some((c) => c.rate.isNeg() || c.rate.gt(100))) throw new Error('Tax rate must be 0–100');
+  const parts = comps ?? [{ rate: l.taxType === 'STANDARD' ? d(l.taxRate) : d(0), stacked: false }];
+  // effective rate of the whole group (tax on a base of 1)
+  let running = d(0);
+  for (const c of parts) running = running.plus(d(1).plus(c.stacked ? running : 0).times(c.rate).div(100));
+  const rate = running.times(100);
   // net (exclusive of tax), unrounded
-  const netRaw = inclusive && rate.gt(0) ? afterDisc.div(rate.div(100).plus(1)) : afterDisc;
-  return { gross, disc, afterDisc, rate, netRaw };
+  const netRaw = inclusive && rate.gt(0) ? afterDisc.div(running.plus(1)) : afterDisc;
+  return { gross, disc, afterDisc, rate, netRaw, parts };
+}
+
+/** Tax per component on a given net, each rounded to 2 dp (stacked components see the rounded earlier ones). */
+function componentAmounts(net: Decimal, parts: { rate: Decimal; stacked: boolean }[]) {
+  const out: Decimal[] = [];
+  let running = d(0);
+  for (const c of parts) {
+    const t = round2(net.plus(c.stacked ? running : 0).times(c.rate).div(100));
+    out.push(t);
+    running = running.plus(t);
+  }
+  return out;
 }
 
 export function calculateTax(
@@ -75,20 +100,30 @@ export function calculateTax(
   const rawTaxes: Decimal[] = [];
 
   for (const l of lines) {
-    const { gross, disc, afterDisc, rate, netRaw } = lineRaw(l, inclusive);
+    const { gross, disc, afterDisc, rate, netRaw, parts } = lineRaw(l, inclusive);
     let net: Decimal;
     let tax: Decimal;
+    let comp: Decimal[];
     if (inclusive) {
       // total is fixed by the price entered; tax is carved out of it
       const total = round2(afterDisc);
       tax = rate.gt(0) ? round2(total.minus(netRaw)) : d(0);
       rawTaxes.push(afterDisc.minus(netRaw));
       net = total.minus(tax);
+      // split the carved-out tax across components; any rounding residue goes to the largest component
+      comp = componentAmounts(netRaw, parts);
+      const resid = tax.minus(sum(comp));
+      if (!resid.isZero() && comp.length) {
+        let k = 0;
+        comp.forEach((c, i) => { if (c.gt(comp[k])) k = i; });
+        comp[k] = comp[k].plus(resid);
+      }
     } else {
       net = round2(netRaw);
-      const t = net.times(rate).div(100);
-      rawTaxes.push(t);
-      tax = round2(t);
+      comp = componentAmounts(net, parts);
+      const t = sum(comp.length ? comp : [d(0)]);
+      rawTaxes.push(parts.length === 1 ? net.times(rate).div(100) : t);
+      tax = t;
     }
     const isStd = l.taxType === 'STANDARD' || l.taxType === 'REVERSE_CHARGE';
     results.push({
@@ -97,6 +132,7 @@ export function calculateTax(
       net: money(net),
       tax: money(tax),
       total: money(net.plus(tax)),
+      componentTax: comp.map((c) => money(c)),
       taxable: money(isStd ? net : 0),
       zeroRated: money(l.taxType === 'ZERO_RATED' ? net : 0),
       exempt: money(l.taxType === 'EXEMPT' || l.taxType === 'OUT_OF_SCOPE' ? net : 0),

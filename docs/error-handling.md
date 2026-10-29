@@ -106,3 +106,11 @@ Messages are stored in a translation file (English now, Nepali later).
 
 ## 9. Data correction (not "errors" but mistakes)
 Users fix accounting mistakes through reversal, credit/debit notes, cancellation or reclassification — never by editing posted data. See 02-accounting-rules.md §10.
+
+## Staff & HR codes (added with the staff portal)
+| Code | HTTP | Meaning |
+|---|---|---|
+| `HR_NOT_STAFF` | 404 | The signed-in user has no staff record (self-service screens) |
+| `HR_DUPLICATE_PAYSLIP` | 409 | A non-cancelled payslip already exists for this staff member and period |
+| `HR_NO_SALARY` | 422 | No salary structure (and no typed basic salary) for the payslip |
+| `HR_ATTENDANCE_STATE` | 409 | Clock-in/out not possible right now (already clocked in/out, nothing to clock out) |
