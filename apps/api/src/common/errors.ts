@@ -40,7 +40,7 @@ export function toProblem(err: unknown, requestId?: string): ProblemDetails {
       code = m[1] as ErrorCode;
       detail = m[2];
     } else if (pg.code === '23505') {
-      code = pg.constraint === 'ux_bill_supplier_invoice' ? 'DOC_DUPLICATE_INVOICE' : 'DOC_DUPLICATE';
+      code = pg.constraint === 'ux_bill_supplier_invoice' ? 'DOC_DUPLICATE_INVOICE' : pg.constraint?.startsWith('ux_rm_') ? 'BANK_ALREADY_MATCHED' : 'DOC_DUPLICATE';
       detail = ERROR_CATALOGUE[code].title;
       if (process.env.NODE_ENV !== 'production') meta = { constraint: pg.constraint };
     } else if (pg.code === '23P01') {
